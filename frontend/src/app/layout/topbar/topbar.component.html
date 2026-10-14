@@ -1,0 +1,13 @@
+<header class="topbar">
+  <button type="button" class="icon-btn menu" (click)="menuToggle.emit()" aria-label="Menu">☰</button>
+
+  <div class="spacer"></div>
+
+  <span class="email">{{ auth.email() }}</span>
+
+  <button type="button" class="icon-btn" (click)="theme.toggle()" aria-label="Thème">
+    {{ theme.theme() === 'light' ? '☾' : '☀' }}
+  </button>
+
+  <button type="button" class="btn ghost" (click)="auth.logout()">Déconnexion</button>
+</header>

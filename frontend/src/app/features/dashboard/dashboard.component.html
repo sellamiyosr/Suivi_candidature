@@ -1,0 +1,80 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Vue d'ensemble de vos candidatures</p>
+    </div>
+    <a routerLink="/applications/new" class="btn primary">+ Nouvelle candidature</a>
+  </header>
+
+  @if (error) {
+    <div class="alert">{{ error }}</div>
+  }
+  @if (actionError) {
+    <div class="alert">{{ actionError }}</div>
+  }
+
+  @if (loading) {
+    <p class="muted">Chargement…</p>
+  } @else if (stats) {
+    <div class="stat-cards">
+      <article class="stat-card">
+        <span>Total</span>
+        <strong>{{ stats.total }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>En attente</span>
+        <strong>{{ statusCount('EN_ATTENTE') }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>Entretiens</span>
+        <strong>{{ statusCount('ENTRETIEN') }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>Refusées</span>
+        <strong>{{ statusCount('REFUSEE') }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>Offres</span>
+        <strong>{{ statusCount('OFFRE') }}</strong>
+      </article>
+      <article class="stat-card accent">
+        <span>Relances à faire</span>
+        <strong>{{ stats.pendingFollowUps }}</strong>
+      </article>
+    </div>
+
+    <app-follow-up-list
+      [applications]="followUps"
+      [loading]="false"
+      (relancer)="onRelancer($event)"
+    />
+
+    <section class="recent">
+      <div class="section-head">
+        <h2>Candidatures récentes</h2>
+        <a routerLink="/applications" class="btn ghost">Tout voir</a>
+      </div>
+      @if (recent.length === 0) {
+        <p class="muted">Aucune candidature pour le moment.</p>
+      } @else {
+        <div class="recent-list">
+          @for (app of recent; track app.id) {
+            <button type="button" class="recent-item" (click)="open(app)">
+              <div>
+                <strong>{{ app.company }}</strong>
+                <span>{{ app.jobTitle }}</span>
+              </div>
+              <div class="meta">
+                <app-status-badge [status]="app.status" />
+                <span>{{ app.applicationDate | date: 'dd/MM/yyyy' }}</span>
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </section>
+
+    <app-statistics [stats]="stats" />
+  }
+</section>

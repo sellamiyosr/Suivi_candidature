@@ -1,0 +1,91 @@
+<section class="page" (paste)="onPaste($event)">
+  <header class="page-header">
+    <div>
+      <h1>{{ isEdit ? 'Modifier la candidature' : 'Nouvelle candidature' }}</h1>
+      <p>Renseignez les informations de l'offre</p>
+    </div>
+    <a routerLink="/applications" class="btn ghost">Retour</a>
+  </header>
+
+  @if (error) {
+    <div class="alert">{{ error }}</div>
+  }
+
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <fieldset>
+      <legend>Principal</legend>
+      <div class="grid">
+        <label>Entreprise *<input formControlName="company" /></label>
+        <label>Poste *<input formControlName="jobTitle" /></label>
+        <label>Lien de l'offre<input formControlName="jobUrl" type="url" /></label>
+        <label>Référence<input formControlName="reference" /></label>
+        <label>Date de candidature<input formControlName="applicationDate" type="date" /></label>
+        <label>Plateforme<input formControlName="platform" placeholder="LinkedIn, Indeed…" /></label>
+        <label>Localisation<input formControlName="location" /></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Important</legend>
+      <label>Éléments majeurs<textarea formControlName="importantElements" rows="3"></textarea></label>
+      <label>Compétences / technologies<input formControlName="skills" /></label>
+      <label>Description<textarea formControlName="description" rows="4"></textarea></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contact</legend>
+      <div class="grid">
+        <label>Nom<input formControlName="contactName" /></label>
+        <label>Email<input formControlName="contactEmail" type="email" /></label>
+        <label>LinkedIn<input formControlName="contactLinkedin" /></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Suivi</legend>
+      <div class="grid">
+        <label>
+          Statut
+          <select formControlName="status">
+            @for (s of statuses; track s) {
+              <option [value]="s">{{ statusLabels[s] }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Priorité
+          <select formControlName="priority">
+            @for (p of priorities; track p) {
+              <option [value]="p">{{ priorityLabels[p] }}</option>
+            }
+          </select>
+        </label>
+        @if (isEdit) {
+          <label>Relance 1<input formControlName="followUp1Date" type="date" /></label>
+          <label>Relance 2<input formControlName="followUp2Date" type="date" /></label>
+        }
+      </div>
+      <label>Notes<textarea formControlName="notes" rows="3"></textarea></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Capture</legend>
+      <div class="screenshot-box">
+        <label class="btn ghost file-btn">
+          📷 Ajouter une capture
+          <input type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
+        </label>
+        <span class="hint">ou collez une image (Ctrl+V)</span>
+        @if (screenshotPreview) {
+          <img [src]="screenshotPreview" alt="Capture de l'offre" />
+        }
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button class="btn primary" type="submit" [disabled]="loading">
+        {{ loading ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </form>
+</section>

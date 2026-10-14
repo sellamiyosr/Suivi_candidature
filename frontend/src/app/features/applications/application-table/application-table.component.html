@@ -1,0 +1,32 @@
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Entreprise</th>
+        <th>Poste</th>
+        <th>Date</th>
+        <th>Plateforme</th>
+        <th>Statut</th>
+        <th>Relance</th>
+        <th>Priorité</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (app of applications; track app.id) {
+        <tr (click)="rowClick.emit(app)">
+          <td>{{ app.company }}</td>
+          <td>{{ app.jobTitle }}</td>
+          <td>{{ app.applicationDate | date: 'dd/MM/yyyy' }}</td>
+          <td>{{ app.platform || '—' }}</td>
+          <td><app-status-badge [status]="app.status" /></td>
+          <td>{{ followUpLabel(app) }}</td>
+          <td>{{ priorityLabels[app.priority] }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="7" class="empty">Aucune candidature</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

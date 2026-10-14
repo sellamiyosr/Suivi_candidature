@@ -1,0 +1,10 @@
+<div class="shell" [class.mobile-open]="mobileOpen">
+  <div class="backdrop" (click)="closeMobile()"></div>
+  <app-sidebar class="sidebar-host" (navigate)="closeMobile()"></app-sidebar>
+  <div class="main">
+    <app-topbar (menuToggle)="toggleMobile()"></app-topbar>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

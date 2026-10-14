@@ -1,0 +1,23 @@
+.charts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 240px;
+}
+
+@media (max-width: 1100px) {
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}

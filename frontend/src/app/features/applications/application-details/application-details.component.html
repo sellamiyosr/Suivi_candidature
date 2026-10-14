@@ -1,0 +1,123 @@
+@if (error) {
+  <div class="alert">{{ error }}</div>
+}
+@if (success) {
+  <div class="success">{{ success }}</div>
+}
+
+@if (app) {
+  <section class="page">
+    <header class="page-header">
+      <div>
+        <div class="eyebrow">
+          <app-status-badge [status]="app.status" />
+          <span>{{ priorityLabels[app.priority] }}</span>
+        </div>
+        <h1>{{ app.company }}</h1>
+        <p>{{ app.jobTitle }}</p>
+      </div>
+      <div class="header-actions">
+        <a class="btn ghost" [routerLink]="['/applications', app.id, 'edit']">Modifier</a>
+        <button type="button" class="btn danger" (click)="delete()">Supprimer</button>
+      </div>
+    </header>
+
+    <div class="action-bar">
+      @if (nextFollowUp; as n) {
+        <button
+          type="button"
+          class="btn primary"
+          [disabled]="actionLoading"
+          (click)="markAsFollowedUp()"
+        >
+          Marquer comme relancée (R{{ n }})
+        </button>
+      } @else {
+        <button type="button" class="btn ghost" disabled>Relances terminées</button>
+      }
+      <button type="button" class="btn ghost" (click)="generateMessage()">Générer message</button>
+    </div>
+
+    @if (messageVisible) {
+      <article class="card message-card">
+        <div class="message-header">
+          <h2>Message de relance</h2>
+          <button type="button" class="btn primary" (click)="copyMessage()">
+            {{ copied ? 'Copié !' : 'Copier' }}
+          </button>
+        </div>
+        <pre>{{ messagePreview }}</pre>
+      </article>
+    }
+
+    <div class="detail-grid">
+      <article class="card">
+        <h2>Informations</h2>
+        <dl>
+          <div><dt>Date</dt><dd>{{ app.applicationDate | date: 'dd/MM/yyyy' }}</dd></div>
+          <div><dt>Plateforme</dt><dd>{{ app.platform || '—' }}</dd></div>
+          <div><dt>Référence</dt><dd>{{ app.reference || '—' }}</dd></div>
+          <div><dt>Localisation</dt><dd>{{ app.location || '—' }}</dd></div>
+          <div>
+            <dt>Lien</dt>
+            <dd>
+              @if (app.jobUrl) {
+                <a [href]="app.jobUrl" target="_blank" rel="noopener">Voir l'offre</a>
+              } @else {
+                —
+              }
+            </dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="card">
+        <h2>Contenu</h2>
+        <p><strong>Éléments importants</strong><br />{{ app.importantElements || '—' }}</p>
+        <p><strong>Compétences</strong><br />{{ app.skills || '—' }}</p>
+        <p><strong>Description</strong><br />{{ app.description || '—' }}</p>
+      </article>
+
+      <article class="card">
+        <h2>Contact</h2>
+        <dl>
+          <div><dt>Nom</dt><dd>{{ app.contactName || '—' }}</dd></div>
+          <div><dt>Email</dt><dd>{{ app.contactEmail || '—' }}</dd></div>
+          <div><dt>LinkedIn</dt><dd>{{ app.contactLinkedin || '—' }}</dd></div>
+        </dl>
+      </article>
+
+      <article class="card">
+        <h2>Relances</h2>
+        <dl>
+          <div>
+            <dt>Relance 1</dt>
+            <dd>
+              {{ app.followUp1Date | date: 'dd/MM/yyyy' }}
+              · {{ app.followUp1Done ? 'faite le ' + (app.followUp1DoneDate | date: 'dd/MM/yyyy') : 'à faire' }}
+            </dd>
+          </div>
+          <div>
+            <dt>Relance 2</dt>
+            <dd>
+              {{ app.followUp2Date | date: 'dd/MM/yyyy' }}
+              · {{ app.followUp2Done ? 'faite le ' + (app.followUp2DoneDate | date: 'dd/MM/yyyy') : 'à faire' }}
+            </dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="card full">
+        <h2>Notes</h2>
+        <p>{{ app.notes || '—' }}</p>
+      </article>
+
+      @if (screenshotUrl) {
+        <article class="card full">
+          <h2>Capture</h2>
+          <img [src]="screenshotUrl" alt="Capture de l'offre" />
+        </article>
+      }
+    </div>
+  </section>
+}

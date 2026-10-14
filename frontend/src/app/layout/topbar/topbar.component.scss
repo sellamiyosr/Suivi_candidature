@@ -1,0 +1,36 @@
+.topbar {
+  height: 3.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.email {
+  color: var(--muted);
+  font-size: 0.875rem;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .menu {
+    display: inline-flex;
+  }
+
+  .email {
+    display: none;
+  }
+}

@@ -1,0 +1,63 @@
+name: Deploy frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Inject production API URL
+        env:
+          API_URL: ${{ secrets.API_URL }}
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "::error::Secret API_URL manquant. Exemple : https://votre-service.onrender.com/api"
+            exit 1
+          fi
+          # Normaliser : pas de slash final, suffixe /api si besoin
+          API_URL="${API_URL%/}"
+          case "$API_URL" in
+            */api) ;;
+            *) API_URL="${API_URL}/api" ;;
+          esac
+          echo "API_URL utilisée : $API_URL"
+          sed -i "s|__API_URL__|${API_URL}|g" src/environments/environment.prod.ts
+
+      - name: Build Angular
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          npm run build -- --configuration=production --base-href="/${REPO_NAME}/"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: frontend/dist/pfe-tracker-ui/browser
+          force_orphan: true

@@ -1,0 +1,41 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Mes candidatures</h1>
+      <p>Recherche, filtres et suivi de vos offres</p>
+    </div>
+    <a routerLink="/applications/new" class="btn primary">+ Nouvelle candidature</a>
+  </header>
+
+  <div class="filters">
+    <input
+      type="search"
+      placeholder="Rechercher entreprise, poste…"
+      [ngModel]="search()"
+      (ngModelChange)="onSearch($event)"
+    />
+    <select [ngModel]="statusFilter()" (ngModelChange)="onStatus($event)">
+      <option value="">Tous les statuts</option>
+      @for (s of statuses; track s) {
+        <option [value]="s">{{ statusLabels[s] }}</option>
+      }
+    </select>
+    <select [ngModel]="platformFilter()" (ngModelChange)="onPlatform($event)">
+      <option value="">Toutes les plateformes</option>
+      @for (p of platforms(); track p) {
+        <option [value]="p">{{ p }}</option>
+      }
+    </select>
+    <button type="button" class="btn ghost" (click)="toggleSort()">
+      Tri date {{ sortAsc() ? '↑' : '↓' }}
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Chargement…</p>
+  } @else if (error()) {
+    <div class="alert">{{ error() }}</div>
+  } @else {
+    <app-application-table [applications]="filtered()" (rowClick)="open($event)" />
+  }
+</section>

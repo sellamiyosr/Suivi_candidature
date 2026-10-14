@@ -1,0 +1,23 @@
+<aside class="sidebar">
+  <div class="brand">
+    <span class="brand-mark">PFE</span>
+    <div>
+      <strong>Tracker</strong>
+      <small>Candidatures</small>
+    </div>
+  </div>
+
+  <nav>
+    @for (link of links; track link.path) {
+      <a
+        [routerLink]="link.path"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: link.path === '/applications/new' || link.path === '/dashboard' || link.path === '/settings' }"
+        (click)="navigate.emit()"
+      >
+        <span class="icon">{{ link.icon }}</span>
+        {{ link.label }}
+      </a>
+    }
+  </nav>
+</aside>

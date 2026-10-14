@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PFE Tracker</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <strong>PFE Tracker</strong>
+    <button type="button" id="btn-settings" class="link" title="Configuration">⚙</button>
+  </header>
+
+  <section id="view-config" class="view hidden">
+    <h1>Configuration</h1>
+    <p class="hint">Backend démarré + compte déjà créé sur le site</p>
+    <label>URL de l'API
+      <input id="apiUrl" type="url" placeholder="http://localhost:8080/api" value="http://localhost:8080/api" />
+    </label>
+    <label>Email
+      <input id="email" type="email" autocomplete="username" />
+    </label>
+    <label>Mot de passe
+      <input id="password" type="password" autocomplete="current-password" />
+    </label>
+    <button type="button" id="btn-save-config" class="primary">Se connecter</button>
+    <p id="config-error" class="error"></p>
+  </section>
+
+  <section id="view-home" class="view hidden">
+    <p class="hint">Sur une page d'offre, cliquez pour préremplir.</p>
+    <button type="button" id="btn-extract" class="primary">Ajouter à PFE Tracker</button>
+    <p id="home-status" class="status"></p>
+  </section>
+
+  <section id="view-form" class="view hidden">
+    <h1>Nouvelle candidature</h1>
+    <label>Entreprise <input id="company" /></label>
+    <label>Poste <input id="jobTitle" /></label>
+    <label>Lien <input id="jobUrl" /></label>
+    <label>Plateforme <input id="platform" /></label>
+    <label>Localisation <input id="location" /></label>
+    <label>Référence <input id="reference" /></label>
+    <label>Description <textarea id="description" rows="4"></textarea></label>
+    <label class="checkbox">
+      <input id="applied" type="checkbox" checked />
+      J'ai postulé
+    </label>
+    <div class="actions">
+      <button type="button" id="btn-back" class="ghost">Retour</button>
+      <button type="button" id="btn-submit" class="primary">Enregistrer</button>
+    </div>
+    <p id="form-status" class="status"></p>
+    <p id="form-error" class="error"></p>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<section class="follow-ups">
+  <h2>🔴 Relances à faire aujourd'hui</h2>
+
+  @if (loading) {
+    <p class="muted">Chargement…</p>
+  } @else if (applications.length === 0) {
+    <p class="muted empty">Aucune relance due pour le moment.</p>
+  } @else {
+    <ul>
+      @for (app of applications; track app.id) {
+        <li>
+          <a class="info" [routerLink]="['/applications', app.id]">
+            <strong>{{ app.company }}</strong>
+            <span>{{ app.jobTitle }}</span>
+            <span class="due">{{ labelFor(app) }}</span>
+          </a>
+          <div class="actions">
+            <app-status-badge [status]="app.status" />
+            @if (nextNumber(app); as n) {
+              <button type="button" class="btn primary" (click)="onRelancer(app, $event)">
+                Relancer
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

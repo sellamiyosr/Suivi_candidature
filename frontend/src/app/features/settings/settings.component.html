@@ -1,0 +1,28 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Paramètres</h1>
+      <p>Préférences locales (navigateur)</p>
+    </div>
+  </header>
+
+  <form class="card form" (ngSubmit)="save()">
+    <label>
+      Nom complet
+      <input [(ngModel)]="fullName" name="fullName" placeholder="Prénom Nom" />
+      <small>Utilisé pour générer les messages de relance</small>
+    </label>
+
+    <div class="row">
+      <span>Thème</span>
+      <button type="button" class="btn ghost" (click)="theme.toggle()">
+        {{ theme.theme() === 'light' ? 'Passer en sombre' : 'Passer en clair' }}
+      </button>
+    </div>
+
+    <button type="submit" class="btn primary">Enregistrer</button>
+    @if (saved) {
+      <span class="ok">Enregistré</span>
+    }
+  </form>
+</section>

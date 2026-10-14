@@ -25,6 +25,7 @@ export class ApplicationListComponent implements OnInit {
   readonly statusFilter = signal<string>('');
   readonly platformFilter = signal('');
   readonly sortAsc = signal(false);
+  readonly sortBy = signal<'date' | 'score'>('date');
 
   readonly statuses = ALL_STATUSES;
   readonly statusLabels = STATUS_LABELS;
@@ -43,6 +44,7 @@ export class ApplicationListComponent implements OnInit {
     const status = this.statusFilter();
     const platform = this.platformFilter();
     const asc = this.sortAsc();
+    const sortBy = this.sortBy();
 
     return this.applications()
       .filter((a) => {
@@ -56,6 +58,11 @@ export class ApplicationListComponent implements OnInit {
         return matchesSearch && matchesStatus && matchesPlatform;
       })
       .sort((a, b) => {
+        if (sortBy === 'score') {
+          const sa = a.matchScore ?? -1;
+          const sb = b.matchScore ?? -1;
+          return asc ? sa - sb : sb - sa;
+        }
         const da = a.applicationDate ?? '';
         const db = b.applicationDate ?? '';
         return asc ? da.localeCompare(db) : db.localeCompare(da);
@@ -98,5 +105,15 @@ export class ApplicationListComponent implements OnInit {
 
   toggleSort(): void {
     this.sortAsc.update((v) => !v);
+  }
+
+  sortByDate(): void {
+    this.sortBy.set('date');
+    this.toggleSort();
+  }
+
+  sortByScore(): void {
+    this.sortBy.set('score');
+    this.sortAsc.set(false);
   }
 }

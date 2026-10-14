@@ -60,4 +60,12 @@ export class ApplicationService {
   screenshotUrl(id: number): string {
     return `${this.api}/${id}/screenshot`;
   }
+
+  recalculateMatch(id: number): Observable<Application> {
+    return this.http.post<Application>(`${this.api}/${id}/match`, {});
+  }
+
+  recalculateAllMatches(): Observable<Application[]> {
+    return this.http.post<Application[]>(`${this.api}/match/all`, {});
+  }
 }

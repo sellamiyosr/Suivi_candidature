@@ -34,6 +34,19 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findFollowUpsDue(@Param("userId") Long userId, @Param("today") LocalDate today);
 
     @Query("""
+            SELECT a FROM Application a JOIN FETCH a.user
+            WHERE (
+                    (a.followUp1Done = false AND a.followUp1Date IS NOT NULL AND a.followUp1Date <= :today
+                     AND a.followUp1ReminderSent = false)
+                 OR (a.followUp1Done = true AND a.followUp2Done = false
+                     AND a.followUp2Date IS NOT NULL AND a.followUp2Date <= :today
+                     AND a.followUp2ReminderSent = false)
+              )
+            ORDER BY a.user.id ASC, a.followUp1Date ASC, a.followUp2Date ASC
+            """)
+    List<Application> findFollowUpsDueForReminder(@Param("today") LocalDate today);
+
+    @Query("""
             SELECT a.status, COUNT(a) FROM Application a
             WHERE a.user.id = :userId
             GROUP BY a.status

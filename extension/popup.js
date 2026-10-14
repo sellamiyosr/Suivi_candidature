@@ -23,7 +23,14 @@ const els = {
   location: document.getElementById('location'),
   reference: document.getElementById('reference'),
   description: document.getElementById('description'),
-  applied: document.getElementById('applied')
+  skills: document.getElementById('skills'),
+  importantElements: document.getElementById('importantElements'),
+  contactName: document.getElementById('contactName'),
+  contactEmail: document.getElementById('contactEmail'),
+  contactLinkedin: document.getElementById('contactLinkedin'),
+  applied: document.getElementById('applied'),
+  matchScore: document.getElementById('match-score'),
+  matchDetail: document.getElementById('match-detail')
 };
 
 let config = {
@@ -145,6 +152,8 @@ els.btnExtract.addEventListener('click', async () => {
 
     fillForm(extracted);
     showView('form');
+    await enrichKeywordsFromApi();
+    await refreshMatchPreview();
   } catch (err) {
     els.homeStatus.textContent = '';
     els.homeStatus.style.color = 'var(--danger)';
@@ -168,6 +177,11 @@ els.btnSubmit.addEventListener('click', async () => {
     location: els.location.value.trim() || null,
     reference: els.reference.value.trim() || null,
     description: els.description.value.trim() || null,
+    skills: els.skills.value.trim() || null,
+    importantElements: els.importantElements.value.trim() || null,
+    contactName: els.contactName.value.trim() || null,
+    contactEmail: els.contactEmail.value.trim() || null,
+    contactLinkedin: els.contactLinkedin.value.trim() || null,
     status: 'EN_ATTENTE',
     priority: 'MOYENNE',
     applicationDate: applied ? todayIso() : null
@@ -219,9 +233,105 @@ function fillForm(data) {
   els.location.value = data.location || '';
   els.reference.value = data.reference || '';
   els.description.value = data.description || '';
+  els.skills.value = data.skills || '';
+  els.importantElements.value = data.importantElements || '';
+  els.contactName.value = data.contactName || '';
+  els.contactEmail.value = data.contactEmail || '';
+  els.contactLinkedin.value = data.contactLinkedin || '';
   els.applied.checked = true;
   els.homeStatus.style.color = 'var(--ok)';
+  els.matchScore.textContent = '…';
+  els.matchDetail.textContent = '';
 }
+
+async function enrichKeywordsFromApi() {
+  try {
+    const res = await fetch(`${config.apiUrl}/match/keywords`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.token}`
+      },
+      body: JSON.stringify({
+        jobTitle: els.jobTitle.value.trim(),
+        description: els.description.value.trim(),
+        skills: els.skills.value.trim(),
+        importantElements: els.importantElements.value.trim()
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.skills) {
+      return;
+    }
+    const existing = els.skills.value
+      .split(/[,;\n]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const detected = (data.keywords || data.skills.split(/,\s*/)).map((s) => String(s).trim());
+    const merged = [...new Set([...existing, ...detected].map((s) => s).filter(Boolean))];
+    els.skills.value = merged.join(', ');
+  } catch {
+    /* non bloquant */
+  }
+}
+
+async function refreshMatchPreview() {
+  els.matchScore.textContent = '…';
+  els.matchDetail.textContent = 'Calcul…';
+  els.matchScore.className = 'match-score';
+  try {
+    const res = await fetch(`${config.apiUrl}/match/preview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.token}`
+      },
+      body: JSON.stringify({
+        jobTitle: els.jobTitle.value.trim(),
+        description: els.description.value.trim(),
+        skills: els.skills.value.trim(),
+        importantElements: els.importantElements.value.trim()
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      els.matchScore.textContent = '—';
+      els.matchDetail.textContent = data.message || 'Aperçu indisponible';
+      return;
+    }
+    if (data.insufficient) {
+      els.matchScore.textContent = 'N/A';
+      els.matchDetail.textContent = data.message || 'Description insuffisante';
+      return;
+    }
+    if (data.score == null) {
+      els.matchScore.textContent = '—';
+      els.matchDetail.textContent = data.message || 'Ajoute un CV dans Paramètres du site';
+      return;
+    }
+    els.matchScore.textContent = `${data.score}%`;
+    const level = data.score < 40 ? 'low' : data.score < 70 ? 'mid' : 'high';
+    els.matchScore.className = `match-score ${level}`;
+    const matched = (data.matchedKeywords || []).slice(0, 5).join(', ');
+    const missing = (data.missingKeywords || []).slice(0, 5).join(', ');
+    els.matchDetail.textContent =
+      `Estimation ATS (pas un vrai ATS). Trouvés: ${matched || '—'}. Manquants: ${missing || '—'}.`;
+  } catch {
+    els.matchScore.textContent = '—';
+    els.matchDetail.textContent = 'Aperçu indisponible';
+  }
+}
+
+els.description.addEventListener('change', () => {
+  if (!els.viewForm.classList.contains('hidden')) {
+    refreshMatchPreview();
+  }
+});
+els.jobTitle.addEventListener('change', () => {
+  if (!els.viewForm.classList.contains('hidden')) {
+    refreshMatchPreview();
+  }
+});
 
 function normalizeApiUrl(url) {
   let value = url.trim().replace(/\/+$/, '');

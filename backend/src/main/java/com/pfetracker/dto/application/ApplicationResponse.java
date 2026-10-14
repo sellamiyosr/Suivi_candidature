@@ -32,6 +32,10 @@ public class ApplicationResponse {
     private boolean followUp2Done;
     private LocalDate followUp2DoneDate;
     private String notes;
+    private Integer matchScore;
+    private String matchedKeywords;
+    private String missingKeywords;
+    private boolean matchInsufficient;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -61,6 +65,10 @@ public class ApplicationResponse {
         response.followUp2Done = application.isFollowUp2Done();
         response.followUp2DoneDate = application.getFollowUp2DoneDate();
         response.notes = application.getNotes();
+        response.matchInsufficient = com.pfetracker.service.MatchService.isInsufficientStored(application.getMatchedKeywords());
+        response.matchScore = response.matchInsufficient ? null : application.getMatchScore();
+        response.matchedKeywords = response.matchInsufficient ? null : application.getMatchedKeywords();
+        response.missingKeywords = response.matchInsufficient ? null : application.getMissingKeywords();
         response.createdAt = application.getCreatedAt();
         response.updatedAt = application.getUpdatedAt();
         return response;
@@ -160,6 +168,22 @@ public class ApplicationResponse {
 
     public String getNotes() {
         return notes;
+    }
+
+    public Integer getMatchScore() {
+        return matchScore;
+    }
+
+    public String getMatchedKeywords() {
+        return matchedKeywords;
+    }
+
+    public String getMissingKeywords() {
+        return missingKeywords;
+    }
+
+    public boolean isMatchInsufficient() {
+        return matchInsufficient;
     }
 
     public Instant getCreatedAt() {

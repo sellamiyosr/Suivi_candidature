@@ -165,6 +165,22 @@ APP_REGISTRATION_ENABLED=false
 | `CORS_ALLOWED_ORIGINS` | Origines front (séparées par `,`) | `http://localhost:4200` |
 | `APP_REGISTRATION_ENABLED` | Autoriser `/register` | `true` |
 | `PORT` | Port HTTP | `8080` |
+| `MAIL_ENABLED` | Activer l’envoi d’e-mails | `false` |
+| `MAIL_HOST` | Serveur SMTP | — |
+| `MAIL_PORT` | Port SMTP | `587` |
+| `MAIL_USERNAME` | Identifiant SMTP | — |
+| `MAIL_PASSWORD` | Mot de passe SMTP / app | — |
+| `MAIL_FROM` | Expéditeur | `noreply@pfetracker.local` |
+| `REMINDER_CRON` | Cron des rappels | `0 0 8 * * *` (8h) |
+| `REMINDER_ZONE` | Fuseau | `Europe/Paris` |
+
+### Rappels e-mail (relances)
+
+Chaque jour à 8h (configurable), le backend envoie **à ton adresse de compte** un digest des relances dues / en retard. Ce n’est **pas** un envoi automatique au recruteur.
+
+1. Active SMTP (ex. Gmail + [mot de passe d’application](https://myaccount.google.com/apppasswords))
+2. Dans Paramètres : coche « Recevoir un e-mail le jour d’une relance » → **Enregistrer**
+3. Bouton **Envoyer un e-mail de test** pour vérifier
 
 Ne jamais committer de secrets (`.gitignore` ignore `.env`, `node_modules`, `target/`, etc.).
 
@@ -172,7 +188,7 @@ Ne jamais committer de secrets (`.gitignore` ignore `.env`, `node_modules`, `tar
 
 - Auth JWT (2 comptes, isolation des données)
 - CRUD candidatures + captures
-- Relances auto (+14 j / +21 j) + marquage + message template
+- Relances auto (+14 j / +21 j) + marquage + message template + rappel e-mail optionnel
 - Dashboard (cartes, relances du jour, récents, graphiques)
 - Extension Chrome (extraction LinkedIn / Indeed / WTTJ)
 

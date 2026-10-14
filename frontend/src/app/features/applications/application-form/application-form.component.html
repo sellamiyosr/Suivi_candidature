@@ -11,6 +11,12 @@
     <div class="alert">{{ error }}</div>
   }
 
+  <p class="cv-hint muted">
+    Pour un score de compatibilité, ajoute ton CV dans
+    <a routerLink="/settings">Paramètres</a>
+    (estimation type ATS — aucun ATS réel n'est interrogé).
+  </p>
+
   <form class="form" [formGroup]="form" (ngSubmit)="submit()">
     <fieldset>
       <legend>Principal</legend>

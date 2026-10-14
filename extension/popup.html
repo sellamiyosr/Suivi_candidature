@@ -36,6 +36,11 @@
 
   <section id="view-form" class="view hidden">
     <h1>Nouvelle candidature</h1>
+    <div id="match-box" class="match-box">
+      <div class="match-label">Compatibilité CV (estimation ATS)</div>
+      <div id="match-score" class="match-score">…</div>
+      <p id="match-detail" class="match-detail"></p>
+    </div>
     <label>Entreprise <input id="company" /></label>
     <label>Poste <input id="jobTitle" /></label>
     <label>Lien <input id="jobUrl" /></label>
@@ -43,6 +48,14 @@
     <label>Localisation <input id="location" /></label>
     <label>Référence <input id="reference" /></label>
     <label>Description <textarea id="description" rows="4"></textarea></label>
+    <label>Mots-clés / compétences <textarea id="skills" rows="2" placeholder="Java, Spring, Angular…"></textarea></label>
+    <label>Éléments importants <textarea id="importantElements" rows="2"></textarea></label>
+    <fieldset class="contact-block">
+      <legend>Contact entreprise</legend>
+      <label>Nom <input id="contactName" /></label>
+      <label>Email <input id="contactEmail" type="email" /></label>
+      <label>LinkedIn <input id="contactLinkedin" type="url" /></label>
+    </fieldset>
     <label class="checkbox">
       <input id="applied" type="checkbox" checked />
       J'ai postulé

@@ -165,9 +165,47 @@ Configuration du backend uniquement par variables d'environnement, avec des vale
 
 Ajoute un `.gitignore` correct (pas de secrets, pas de `node_modules`, pas de `target/`). Ne mets jamais de mots de passe ni de `JWT_SECRET` dans le repo.
 
+## Score de compatibilité CV ↔ offre (estimation type ATS, SANS IA)
+
+Objectif : j'ajoute mon CV (PDF) et, pour chaque offre, l'application affiche un pourcentage de compatibilité calculé par correspondance de mots-clés, comme le font les ATS. C'est une ESTIMATION (aucun ATS réel n'est interrogé). Afficher cette mention dans l'interface.
+
+### CV
+- Page /settings : upload d'un CV au format PDF (un seul CV actif par utilisateur ; un nouvel upload remplace l'ancien)
+- Table `UserCv` : id, user (OneToOne), fileName, pdfContent (LONGBLOB), extractedText (LONGTEXT), uploadedAt
+- Extraction du texte avec Apache PDFBox côté backend, à l'upload. Si le texte extrait est vide (PDF scanné/image), afficher « CV illisible par un ATS, utilise un PDF avec du texte sélectionnable »
+- Possibilité de télécharger / supprimer le CV
+
+### Calcul du score (service `MatchService`, simple et isolé pour brancher une IA plus tard)
+1. Normaliser les textes : minuscules, suppression des accents et de la ponctuation
+2. Extraire les mots-clés de l'offre (titre + description + compétences + éléments importants) en les cherchant dans un **dictionnaire de mots-clés** (fichier `keywords.json` dans les ressources, ~200 entrées : langages, frameworks, bases de données, outils DevOps, cloud, méthodes agiles, soft skills fréquents, langues). Chaque entrée a des synonymes (ex. « spring boot » = « springboot » ; « js » = « javascript » ; « k8s » = « kubernetes »)
+3. Vérifier lesquels sont présents dans le texte du CV
+4. Score = 100 × (poids des mots-clés trouvés ÷ poids total des mots-clés de l'offre). Poids simple : ×2 pour un mot-clé présent dans le titre de l'offre ou dans la section compétences, ×1 sinon
+5. Si l'offre contient moins de 3 mots-clés reconnus : afficher « Description insuffisante pour calculer un score fiable » plutôt qu'un pourcentage
+6. Retourner : score (0–100), mots-clés trouvés, mots-clés manquants
+
+### Données et API
+- Ajouter à Application : `matchScore` (Integer, nullable), `matchedKeywords` (TEXT), `missingKeywords` (TEXT)
+- Le score est calculé automatiquement à la création et à la modification d'une candidature si un CV existe et si la description n'est pas vide
+```
+POST   /api/cv                      (upload du CV, multipart PDF)
+GET    /api/cv                      (infos du CV actif : nom, date)
+GET    /api/cv/download
+DELETE /api/cv
+POST   /api/applications/{id}/match (recalcule le score, utile après changement de CV)
+POST   /api/match/preview           (body : titre + description → score sans rien enregistrer)
+```
+
+### Interface
+- Badge de score coloré : rouge < 40 %, orange 40–69 %, vert ≥ 70 %
+- Colonne « Compatibilité » dans le tableau « Mes candidatures » + tri par score
+- Fiche candidature : jauge/pourcentage, liste « Mots-clés trouvés » (verts) et « Mots-clés manquants » (rouges), bouton « Recalculer »
+- Formulaire : si aucun CV n'est enregistré, lien vers /settings
+- Dashboard : carte supplémentaire « Score moyen »
+- Extension Chrome : après extraction de l'offre, le popup appelle /api/match/preview et affiche le score AVANT d'enregistrer la candidature (pour décider si ça vaut le coup de postuler)
+
 ## Pas d'IA pour la V1
 
-Extraction simple, suivi, relances, dashboard. Prépare le code pour ajouter plus tard : analyse des offres, score de compatibilité, extraction des compétences, génération avancée des relances.
+Extraction simple, suivi, relances, dashboard, score de compatibilité par mots-clés. Prépare le code pour ajouter plus tard : analyse intelligente des offres, score par IA, extraction avancée des compétences, génération avancée des relances.
 
 ## Ordre de travail
 
@@ -178,6 +216,7 @@ Extraction simple, suivi, relances, dashboard. Prépare le code pour ajouter plu
 5. **Étape 5** : système de relances + message de relance
 6. **Étape 6** : dashboard + statistiques
 7. **Étape 7** : extension Chrome
-8. **Étape 8** : configuration de déploiement (variables d'environnement, GitHub Actions, README final)
+8. **Étape 8** : upload du CV + score de compatibilité (backend, interface, aperçu du score dans l'extension)
+9. **Étape 9** : configuration de déploiement (variables d'environnement, GitHub Actions, README final)
 
 Ne crée pas de fonctionnalités non demandées.

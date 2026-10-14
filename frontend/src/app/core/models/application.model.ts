@@ -34,6 +34,10 @@ export interface Application {
   followUp2Done: boolean;
   followUp2DoneDate: string | null;
   notes: string | null;
+  matchScore: number | null;
+  matchedKeywords: string | null;
+  missingKeywords: string | null;
+  matchInsufficient: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,9 +45,34 @@ export interface Application {
 export interface Statistics {
   total: number;
   pendingFollowUps: number;
+  averageMatchScore: number | null;
   byStatus: Record<string, number>;
   byPlatform: Record<string, number>;
   byMonth: Record<string, number>;
+}
+
+export interface MatchResult {
+  score: number | null;
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  insufficient: boolean;
+  message: string | null;
+}
+
+export interface CvInfo {
+  fileName: string;
+  uploadedAt: string;
+  textExtracted: boolean;
+  warning: string | null;
+  detectedSkills: string[];
+}
+
+export interface UserProfile {
+  email?: string | null;
+  skills: string | null;
+  skillsList: string[];
+  emailRemindersEnabled: boolean;
+  mailConfigured: boolean;
 }
 
 export interface ApplicationRequest {

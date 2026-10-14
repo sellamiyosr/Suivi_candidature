@@ -2,7 +2,7 @@
   <header class="page-header">
     <div>
       <h1>Paramètres</h1>
-      <p>Préférences locales (navigateur)</p>
+      <p>Profil, préférences et CV pour le score de compatibilité</p>
     </div>
   </header>
 
@@ -13,6 +13,26 @@
       <small>Utilisé pour générer les messages de relance</small>
     </label>
 
+    <label>
+      Compétences / mots-clés
+      <textarea
+        [(ngModel)]="skillsText"
+        (ngModelChange)="onSkillsTextChange($event)"
+        name="skills"
+        rows="4"
+        placeholder="Ex. Java, Spring Boot, Angular, Docker…"
+      ></textarea>
+      <small>Remplies automatiquement à l’upload du CV (dictionnaire ATS). Tu peux les modifier.</small>
+    </label>
+
+    @if (skillsList.length) {
+      <div class="skill-chips" aria-label="Compétences détectées">
+        @for (skill of skillsList; track skill) {
+          <span class="chip">{{ skill }}</span>
+        }
+      </div>
+    }
+
     <div class="row">
       <span>Thème</span>
       <button type="button" class="btn ghost" (click)="theme.toggle()">
@@ -20,9 +40,89 @@
       </button>
     </div>
 
+    <fieldset class="reminders">
+      <legend>Rappels e-mail (relances)</legend>
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="emailRemindersEnabled" name="emailReminders" />
+        Recevoir un e-mail le jour d’une relance
+      </label>
+      <small>
+        Envoyé à
+        <strong>{{ accountEmail || 'ton compte' }}</strong>
+        (pas au recruteur). Heure par défaut : 8h (Europe/Paris).
+      </small>
+      @if (!mailConfigured) {
+        <p class="warn">
+          SMTP non configuré sur le serveur — ajoute
+          <code>MAIL_ENABLED=true</code>,
+          <code>MAIL_HOST</code>,
+          <code>MAIL_USERNAME</code>,
+          <code>MAIL_PASSWORD</code>,
+          <code>MAIL_FROM</code>
+          puis redémarre le backend.
+        </p>
+      } @else {
+        <button
+          type="button"
+          class="btn ghost"
+          (click)="sendTestReminder()"
+          [disabled]="reminderLoading"
+        >
+          {{ reminderLoading ? 'Envoi…' : 'Envoyer un e-mail de test' }}
+        </button>
+      }
+      @if (reminderMessage) {
+        <p class="ok">{{ reminderMessage }}</p>
+      }
+    </fieldset>
+
     <button type="submit" class="btn primary">Enregistrer</button>
     @if (saved) {
       <span class="ok">Enregistré</span>
     }
   </form>
+
+  <section class="card form cv-card">
+    <h2>Mon CV (PDF)</h2>
+    <p class="hint">
+      À l’upload, le texte du PDF est lu et les compétences reconnues remplissent ton profil.
+      Estimation de compatibilité type ATS — aucun ATS réel n'est interrogé.
+    </p>
+
+    @if (cvError) {
+      <div class="alert">{{ cvError }}</div>
+    }
+    @if (cvMessage) {
+      <p class="ok">{{ cvMessage }}</p>
+    }
+
+    @if (cv) {
+      <div class="cv-info">
+        <div>
+          <strong>{{ cv.fileName }}</strong>
+          <small>Uploadé le {{ cv.uploadedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+          @if (cv.warning) {
+            <p class="warn">{{ cv.warning }}</p>
+          }
+          @if (cv.detectedSkills?.length) {
+            <p class="detected">{{ cv.detectedSkills.length }} mot(s)-clé détecté(s) dans le CV</p>
+          }
+        </div>
+        <div class="cv-actions">
+          <button type="button" class="btn ghost" (click)="downloadCv()">Télécharger</button>
+          <button type="button" class="btn danger" (click)="deleteCv()">Supprimer</button>
+        </div>
+      </div>
+    } @else {
+      <p class="muted">Aucun CV enregistré.</p>
+    }
+
+    <label class="btn ghost file-btn">
+      {{ cv ? 'Remplacer le CV' : 'Uploader un CV PDF' }}
+      <input type="file" accept="application/pdf,.pdf" hidden (change)="onCvSelected($event)" [disabled]="cvLoading" />
+    </label>
+    @if (cvLoading) {
+      <span class="muted">Lecture du CV…</span>
+    }
+  </section>
 </section>

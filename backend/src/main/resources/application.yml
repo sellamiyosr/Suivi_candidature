@@ -19,6 +19,17 @@ spring:
       hibernate:
         format_sql: true
     show-sql: false
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 app:
   jwt:
@@ -27,3 +38,9 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   registration-enabled: ${APP_REGISTRATION_ENABLED:true}
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:noreply@pfetracker.local}
+  reminder:
+    cron: ${REMINDER_CRON:0 0 8 * * *}
+    zone: ${REMINDER_ZONE:Europe/Paris}

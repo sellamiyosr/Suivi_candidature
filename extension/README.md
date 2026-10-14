@@ -23,7 +23,7 @@ Pour reconfigurer : bouton ⚙ en haut à droite du popup.
 
 ### Si « Connexion impossible » / API injoignable
 
-1. Recharger l’extension sur `chrome://extensions` (bouton 🔄) après toute modification
+1. Recharger l’extension sur `chrome://extensions` (bouton 🔄) après toute modification du dossier `extension/` (sinon localisation / description / référence peuvent rester vides)
 2. Vérifier que `http://localhost:8080/api/auth/login` répond (backend démarré)
 3. URL exacte : `http://localhost:8080/api` (pas seulement `http://localhost:8080`)
 4. Utiliser le **même email/mot de passe** que sur le site (sinon : « Email ou mot de passe incorrect »)

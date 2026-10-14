@@ -26,6 +26,14 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** Compétences / mots-clés du profil (souvent remplis depuis le CV). */
+    @Column(columnDefinition = "TEXT")
+    private String skills;
+
+    /** Rappels e-mail pour les relances dues (vers l'email du compte). */
+    @Column(name = "email_reminders_enabled", nullable = false)
+    private boolean emailRemindersEnabled = true;
+
     @PrePersist
     void onCreate() {
         createdAt = Instant.now();
@@ -61,5 +69,21 @@ public class User {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getSkills() {
+        return skills;
+    }
+
+    public void setSkills(String skills) {
+        this.skills = skills;
+    }
+
+    public boolean isEmailRemindersEnabled() {
+        return emailRemindersEnabled;
+    }
+
+    public void setEmailRemindersEnabled(boolean emailRemindersEnabled) {
+        this.emailRemindersEnabled = emailRemindersEnabled;
     }
 }

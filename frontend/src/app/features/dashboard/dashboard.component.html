@@ -42,7 +42,12 @@
         <span>Relances à faire</span>
         <strong>{{ stats.pendingFollowUps }}</strong>
       </article>
+      <article class="stat-card">
+        <span>Score moyen</span>
+        <strong>{{ stats.averageMatchScore != null ? (stats.averageMatchScore + '%') : '—' }}</strong>
+      </article>
     </div>
+    <p class="muted ats-note">Score = estimation type ATS (mots-clés), aucun ATS réel n'est interrogé.</p>
 
     <app-follow-up-list
       [applications]="followUps"

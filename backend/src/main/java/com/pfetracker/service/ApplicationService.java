@@ -4,6 +4,7 @@ import com.pfetracker.dto.application.ApplicationRequest;
 import com.pfetracker.dto.application.ApplicationResponse;
 import com.pfetracker.dto.application.StatisticsResponse;
 import com.pfetracker.dto.application.StatusUpdateRequest;
+import com.pfetracker.dto.match.MatchResult;
 import com.pfetracker.entity.Application;
 import com.pfetracker.entity.ApplicationStatus;
 import com.pfetracker.entity.Priority;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,10 +32,19 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
+    private final MatchService matchService;
+    private final CvService cvService;
 
-    public ApplicationService(ApplicationRepository applicationRepository, UserRepository userRepository) {
+    public ApplicationService(
+            ApplicationRepository applicationRepository,
+            UserRepository userRepository,
+            MatchService matchService,
+            CvService cvService
+    ) {
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
+        this.matchService = matchService;
+        this.cvService = cvService;
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +68,7 @@ public class ApplicationService {
         Application application = new Application();
         application.setUser(user);
         applyRequest(application, request, true);
+        applyMatchIfPossible(application);
         return ApplicationResponse.from(applicationRepository.save(application));
     }
 
@@ -64,7 +76,28 @@ public class ApplicationService {
     public ApplicationResponse update(Long id, ApplicationRequest request) {
         Application application = getOwnedApplication(id);
         applyRequest(application, request, false);
+        applyMatchIfPossible(application);
         return ApplicationResponse.from(applicationRepository.save(application));
+    }
+
+    @Transactional
+    public ApplicationResponse recalculateMatch(Long id) {
+        Application application = getOwnedApplication(id);
+        applyMatchIfPossible(application);
+        return ApplicationResponse.from(applicationRepository.save(application));
+    }
+
+    @Transactional
+    public List<ApplicationResponse> recalculateAllMatches() {
+        Long userId = SecurityUtils.currentUserId();
+        List<Application> applications =
+                applicationRepository.findByUserIdOrderByApplicationDateDescCreatedAtDesc(userId);
+        for (Application application : applications) {
+            applyMatchIfPossible(application);
+        }
+        return applicationRepository.saveAll(applications).stream()
+                .map(ApplicationResponse::from)
+                .toList();
     }
 
     @Transactional
@@ -146,6 +179,15 @@ public class ApplicationService {
             byMonth.put(String.valueOf(row[0]), ((Number) row[1]).longValue());
         }
         stats.setByMonth(byMonth);
+
+        List<Application> apps = applicationRepository.findByUserIdOrderByApplicationDateDescCreatedAtDesc(userId);
+        double avg = apps.stream()
+                .map(Application::getMatchScore)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(Double.NaN);
+        stats.setAverageMatchScore(Double.isNaN(avg) ? null : Math.round(avg * 10.0) / 10.0);
 
         return stats;
     }
@@ -231,6 +273,32 @@ public class ApplicationService {
         LocalDate followUp1 = applicationDate.plusDays(FOLLOW_UP_1_DAYS);
         application.setFollowUp1Date(followUp1);
         application.setFollowUp2Date(followUp1.plusDays(FOLLOW_UP_2_DAYS));
+    }
+
+    private void applyMatchIfPossible(Application application) {
+        boolean hasOfferText = hasText(application.getJobTitle())
+                || hasText(application.getDescription())
+                || hasText(application.getSkills())
+                || hasText(application.getImportantElements());
+        if (!hasOfferText) {
+            return;
+        }
+        String cvText = cvService.getExtractedTextForCurrentUser();
+        if (cvText == null || cvText.isBlank()) {
+            return;
+        }
+        MatchResult result = matchService.compute(
+                application.getJobTitle(),
+                application.getDescription(),
+                application.getSkills(),
+                application.getImportantElements(),
+                cvText
+        );
+        matchService.applyToApplication(application, result);
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     private String trimToNull(String value) {

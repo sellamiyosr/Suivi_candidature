@@ -90,6 +90,16 @@ public class ApplicationController {
         return applicationService.markFollowUp(id, 2);
     }
 
+    @PostMapping("/match/all")
+    public List<ApplicationResponse> recalculateAllMatches() {
+        return applicationService.recalculateAllMatches();
+    }
+
+    @PostMapping("/{id}/match")
+    public ApplicationResponse recalculateMatch(@PathVariable Long id) {
+        return applicationService.recalculateMatch(id);
+    }
+
     @PostMapping(value = "/{id}/screenshot", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApplicationResponse uploadScreenshot(
             @PathVariable Long id,

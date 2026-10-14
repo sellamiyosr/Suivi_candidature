@@ -26,10 +26,14 @@
         <option [value]="p">{{ p }}</option>
       }
     </select>
-    <button type="button" class="btn ghost" (click)="toggleSort()">
-      Tri date {{ sortAsc() ? '↑' : '↓' }}
+    <button type="button" class="btn ghost" (click)="sortByDate()">
+      Tri date {{ sortBy() === 'date' ? (sortAsc() ? '↑' : '↓') : '' }}
+    </button>
+    <button type="button" class="btn ghost" (click)="sortByScore()">
+      Tri score {{ sortBy() === 'score' ? '↓' : '' }}
     </button>
   </div>
+  <p class="muted ats-note">Compatibilité = estimation type ATS (mots-clés), aucun ATS réel n'est interrogé.</p>
 
   @if (loading()) {
     <p class="muted">Chargement…</p>

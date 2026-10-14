@@ -1,12 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Application, PRIORITY_LABELS } from '../../../core/models/application.model';
+import { ScoreBadgeComponent } from '../../../shared/score-badge/score-badge.component';
 import { StatusBadgeComponent } from '../../../shared/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-application-table',
   standalone: true,
-  imports: [DatePipe, StatusBadgeComponent],
+  imports: [DatePipe, StatusBadgeComponent, ScoreBadgeComponent],
   templateUrl: './application-table.component.html',
   styleUrl: './application-table.component.scss'
 })

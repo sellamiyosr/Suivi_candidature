@@ -7,6 +7,7 @@ public class StatisticsResponse {
 
     private long total;
     private long pendingFollowUps;
+    private Double averageMatchScore;
     private Map<String, Long> byStatus = new LinkedHashMap<>();
     private Map<String, Long> byPlatform = new LinkedHashMap<>();
     private Map<String, Long> byMonth = new LinkedHashMap<>();
@@ -25,6 +26,14 @@ public class StatisticsResponse {
 
     public void setPendingFollowUps(long pendingFollowUps) {
         this.pendingFollowUps = pendingFollowUps;
+    }
+
+    public Double getAverageMatchScore() {
+        return averageMatchScore;
+    }
+
+    public void setAverageMatchScore(Double averageMatchScore) {
+        this.averageMatchScore = averageMatchScore;
     }
 
     public Map<String, Long> getByStatus() {

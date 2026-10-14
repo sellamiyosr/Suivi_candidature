@@ -12,12 +12,13 @@ import {
   generateFollowUpMessage,
   nextFollowUpNumber
 } from '../../../core/utils/follow-up-message';
+import { ScoreBadgeComponent } from '../../../shared/score-badge/score-badge.component';
 import { StatusBadgeComponent } from '../../../shared/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-application-details',
   standalone: true,
-  imports: [DatePipe, RouterLink, StatusBadgeComponent],
+  imports: [DatePipe, RouterLink, StatusBadgeComponent, ScoreBadgeComponent],
   templateUrl: './application-details.component.html',
   styleUrl: './application-details.component.scss'
 })
@@ -124,6 +125,33 @@ export class ApplicationDetailsComponent implements OnInit, OnDestroy {
     } catch {
       this.error = 'Impossible de copier dans le presse-papiers';
     }
+  }
+
+  recalculateMatch(): void {
+    if (!this.app) {
+      return;
+    }
+    this.actionLoading = true;
+    this.error = '';
+    this.applicationService.recalculateMatch(this.app.id).subscribe({
+      next: (app) => {
+        this.app = app;
+        this.actionLoading = false;
+        this.success = 'Score recalculé';
+        setTimeout(() => (this.success = ''), 2000);
+      },
+      error: (err) => {
+        this.actionLoading = false;
+        this.error = err?.error?.message ?? 'Recalcul impossible';
+      }
+    });
+  }
+
+  keywordList(value: string | null | undefined): string[] {
+    if (!value?.trim()) {
+      return [];
+    }
+    return value.split(',').map((k) => k.trim()).filter(Boolean);
   }
 
   private loadScreenshot(id: number): void {

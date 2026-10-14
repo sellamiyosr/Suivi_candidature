@@ -58,7 +58,13 @@ public class SecurityConfig {
                         // Préflight CORS (extension Chrome / navigateurs) — sinon HTTP 403
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/applications/**").authenticated()
+                        .requestMatchers(
+                                "/api/applications/**",
+                                "/api/cv/**",
+                                "/api/match/**",
+                                "/api/profile/**",
+                                "/api/reminders/**"
+                        ).authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

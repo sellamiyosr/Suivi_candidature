@@ -103,9 +103,27 @@ public class Application {
     @Column(name = "follow_up2_done_date")
     private LocalDate followUp2DoneDate;
 
+    /** Évite de renvoyer le même rappel e-mail chaque jour. */
+    @Column(name = "follow_up1_reminder_sent", nullable = false)
+    private boolean followUp1ReminderSent = false;
+
+    @Column(name = "follow_up2_reminder_sent", nullable = false)
+    private boolean followUp2ReminderSent = false;
+
     @Lob
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "match_score")
+    private Integer matchScore;
+
+    @Lob
+    @Column(name = "matched_keywords", columnDefinition = "TEXT")
+    private String matchedKeywords;
+
+    @Lob
+    @Column(name = "missing_keywords", columnDefinition = "TEXT")
+    private String missingKeywords;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -325,12 +343,52 @@ public class Application {
         this.followUp2DoneDate = followUp2DoneDate;
     }
 
+    public boolean isFollowUp1ReminderSent() {
+        return followUp1ReminderSent;
+    }
+
+    public void setFollowUp1ReminderSent(boolean followUp1ReminderSent) {
+        this.followUp1ReminderSent = followUp1ReminderSent;
+    }
+
+    public boolean isFollowUp2ReminderSent() {
+        return followUp2ReminderSent;
+    }
+
+    public void setFollowUp2ReminderSent(boolean followUp2ReminderSent) {
+        this.followUp2ReminderSent = followUp2ReminderSent;
+    }
+
     public String getNotes() {
         return notes;
     }
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public Integer getMatchScore() {
+        return matchScore;
+    }
+
+    public void setMatchScore(Integer matchScore) {
+        this.matchScore = matchScore;
+    }
+
+    public String getMatchedKeywords() {
+        return matchedKeywords;
+    }
+
+    public void setMatchedKeywords(String matchedKeywords) {
+        this.matchedKeywords = matchedKeywords;
+    }
+
+    public String getMissingKeywords() {
+        return missingKeywords;
+    }
+
+    public void setMissingKeywords(String missingKeywords) {
+        this.missingKeywords = missingKeywords;
     }
 
     public Instant getCreatedAt() {

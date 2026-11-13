@@ -1,127 +1,362 @@
-.stat-cards {
+.btn-icon {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* ---------------- KPI */
+.kpis {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.ats-note {
-  margin: 0 0 1rem;
-  font-size: 0.8rem;
-}
-
-.stat-card {
+.kpi {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1.1rem 1.15rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 0.85rem;
-  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  min-width: 0;
+
+  &.alert-kpi {
+    border-color: color-mix(in srgb, var(--c-amber) 45%, var(--border));
+  }
+
+  &.skeleton {
+    height: 6.2rem;
+    background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite linear;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.kpi-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &.teal { background: var(--accent-soft); color: var(--accent); }
+  &.blue { background: var(--t-blue); color: var(--c-blue); }
+  &.green { background: var(--t-green); color: var(--c-green); }
+  &.amber { background: var(--t-amber); color: var(--c-amber); }
+}
+
+.kpi-body {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-
-  span {
-    color: var(--muted);
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
-
-  strong {
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
-
-  &.accent {
-    border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
-    background: color-mix(in srgb, var(--primary) 8%, var(--surface));
-
-    strong {
-      color: var(--primary);
-    }
-  }
+  min-width: 0;
 }
 
-.recent {
-  margin: 1rem 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 0.85rem;
-  padding: 1.1rem 1.2rem;
+.kpi-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
-.section-head {
+.kpi-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-sub {
+  font-size: 0.75rem;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------- Panneaux */
+.row {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.two-one {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.halves {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.panel {
+  padding: 1.15rem 1.25rem;
+}
+
+.panel-head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
 
   h2 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.95rem;
+    font-weight: 700;
   }
 }
 
-.recent-list {
+.panel-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* ---------------- Pipeline */
+.bar {
+  display: flex;
+  gap: 3px;
+  height: 0.75rem;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 1.1rem;
+}
+
+.seg {
+  flex-basis: 0;
+  min-width: 6px;
+  background: var(--c-grey);
+
+  &[data-status='RELANCE_1'] { background: var(--c-amber); }
+  &[data-status='RELANCE_2'] { background: var(--c-orange); }
+  &[data-status='ENTRETIEN'] { background: var(--c-blue); }
+  &[data-status='OFFRE'] { background: var(--c-green); }
+  &[data-status='REFUSEE'] { background: var(--c-red); }
+  &[data-status='RETIREE'] { background: var(--border-strong); }
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: 0.5rem 1.25rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .legend-label {
+    flex: 1;
+    color: var(--muted);
+  }
+
+  strong {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pct {
+    width: 2.6rem;
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ---------------- Jauge */
+.score {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+}
+
+.gauge {
+  position: relative;
+  width: 9.5rem;
+  height: 9.5rem;
+  margin: 0.25rem auto 0.75rem;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  circle {
+    fill: none;
+    stroke-width: 10;
+  }
+
+  .track {
+    stroke: var(--surface-2);
+  }
+
+  .value {
+    stroke: var(--accent);
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s ease;
+
+    &[data-level='low'] { stroke: var(--c-red); }
+    &[data-level='mid'] { stroke: var(--c-amber); }
+    &[data-level='high'] { stroke: var(--c-green); }
+  }
+}
+
+.gauge-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  strong {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  small {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  span {
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+}
+
+.note {
+  margin: auto 0 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--faint);
+}
+
+/* ---------------- Récentes */
+.recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .recent-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   width: 100%;
-  text-align: left;
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
-  background: var(--bg);
-  padding: 0.8rem 0.9rem;
-  cursor: pointer;
+  padding: 0.65rem 0.5rem;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: transparent;
   color: inherit;
   font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
 
   &:hover {
-    border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+    background: var(--surface-hover);
   }
+}
+
+li:first-child .recent-item {
+  border-top: none;
+}
+
+.recent-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 
   strong {
-    display: block;
+    font-size: 0.86rem;
+    font-weight: 600;
   }
 
   span {
+    font-size: 0.78rem;
     color: var(--muted);
-    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
-.meta {
+.recent-meta {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
   flex-shrink: 0;
-}
 
-@media (max-width: 1200px) {
-  .stat-cards {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .date {
+    font-size: 0.72rem;
+    color: var(--faint);
   }
 }
 
-@media (max-width: 900px) {
-  .stat-cards {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 700px) {
-  .stat-cards {
+/* ---------------- Responsive */
+@media (max-width: 1150px) {
+  .kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .recent-item {
-    flex-direction: column;
-    align-items: flex-start;
+  .two-one,
+  .halves {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .kpis {
+    grid-template-columns: 1fr;
   }
 }

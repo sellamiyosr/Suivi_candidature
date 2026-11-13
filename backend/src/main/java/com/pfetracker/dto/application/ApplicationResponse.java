@@ -2,7 +2,9 @@ package com.pfetracker.dto.application;
 
 import com.pfetracker.entity.Application;
 import com.pfetracker.entity.ApplicationStatus;
+import com.pfetracker.entity.ContractType;
 import com.pfetracker.entity.Priority;
+import com.pfetracker.entity.WorkMode;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -15,6 +17,12 @@ public class ApplicationResponse {
     private String reference;
     private String platform;
     private String location;
+    private ContractType contractType;
+    private WorkMode workMode;
+    private String startDate;
+    private String duration;
+    private String domain;
+    private String companyLogoUrl;
     private String description;
     private String importantElements;
     private String skills;
@@ -48,6 +56,12 @@ public class ApplicationResponse {
         response.reference = application.getReference();
         response.platform = application.getPlatform();
         response.location = application.getLocation();
+        response.contractType = application.getContractType();
+        response.workMode = application.getWorkMode();
+        response.startDate = application.getStartDate();
+        response.duration = application.getDuration();
+        response.domain = application.getDomain();
+        response.companyLogoUrl = application.getCompanyLogoUrl();
         response.description = application.getDescription();
         response.importantElements = application.getImportantElements();
         response.skills = application.getSkills();
@@ -100,6 +114,30 @@ public class ApplicationResponse {
 
     public String getLocation() {
         return location;
+    }
+
+    public ContractType getContractType() {
+        return contractType;
+    }
+
+    public WorkMode getWorkMode() {
+        return workMode;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public String getCompanyLogoUrl() {
+        return companyLogoUrl;
     }
 
     public String getDescription() {

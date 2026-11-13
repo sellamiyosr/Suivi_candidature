@@ -7,9 +7,7 @@
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 18%, transparent), transparent 40%),
-    var(--bg);
+  background: var(--bg);
 }
 
 .auth-card {
@@ -19,20 +17,25 @@
   gap: 0.9rem;
   padding: 2rem;
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
 }
 
 .brand {
-  color: var(--primary);
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 h1 {
   margin: 0;
+  font-weight: 800;
   font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .subtitle,

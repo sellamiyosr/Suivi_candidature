@@ -1,24 +1,29 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   Application,
-  PRIORITY_LABELS
+  PRIORITY_LABELS,
+  CONTRACT_LABELS,
+  WORK_MODE_LABELS
 } from '../../../core/models/application.model';
 import { ApplicationService } from '../../../core/services/application.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { IntegrationsService } from '../../../core/services/integrations.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import {
   generateFollowUpMessage,
   nextFollowUpNumber
 } from '../../../core/utils/follow-up-message';
+import { CompanyLogoComponent } from '../../../shared/company-logo/company-logo.component';
 import { ScoreBadgeComponent } from '../../../shared/score-badge/score-badge.component';
 import { StatusBadgeComponent } from '../../../shared/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-application-details',
   standalone: true,
-  imports: [DatePipe, RouterLink, StatusBadgeComponent, ScoreBadgeComponent],
+  imports: [DatePipe, FormsModule, RouterLink, StatusBadgeComponent, ScoreBadgeComponent, CompanyLogoComponent],
   templateUrl: './application-details.component.html',
   styleUrl: './application-details.component.scss'
 })
@@ -28,6 +33,7 @@ export class ApplicationDetailsComponent implements OnInit, OnDestroy {
   private readonly applicationService = inject(ApplicationService);
   private readonly auth = inject(AuthService);
   private readonly settings = inject(SettingsService);
+  private readonly integrations = inject(IntegrationsService);
 
   app: Application | null = null;
   error = '';
@@ -37,7 +43,25 @@ export class ApplicationDetailsComponent implements OnInit, OnDestroy {
   messageVisible = false;
   copied = false;
   actionLoading = false;
+
+  // Rédaction / envoi
+  mailTo = '';
+  mailSubject = '';
+  messageFromAi = false;
+  markDoneOnSend = true;
+  readonly sending = signal(false);
+  readonly mailReady = signal(false);
+  readonly mailFrom = signal<string | null>(null);
+
+  // IA
+  readonly aiReady = signal(false);
+  readonly aiBusy = signal<'followup' | 'analysis' | null>(null);
+  readonly aiNotice = signal('');
+  readonly analysis = signal<AnalysisBlock[] | null>(null);
+  readonly analysisUsedCv = signal(true);
   readonly priorityLabels = PRIORITY_LABELS;
+  readonly contractLabels = CONTRACT_LABELS;
+  readonly workModeLabels = WORK_MODE_LABELS;
 
   get nextFollowUp(): 1 | 2 | null {
     return this.app ? nextFollowUpNumber(this.app) : null;
@@ -53,6 +77,16 @@ export class ApplicationDetailsComponent implements OnInit, OnDestroy {
         }
       },
       error: () => (this.error = 'Candidature introuvable')
+    });
+    this.integrations.get().subscribe({
+      next: (s) => {
+        this.aiReady.set(!!s.aiReady);
+        this.mailReady.set(!!s.mailReady);
+        this.mailFrom.set(s.smtpEmail);
+      },
+      error: () => {
+        /* non bloquant */
+      }
     });
   }
 
@@ -110,8 +144,94 @@ export class ApplicationDetailsComponent implements OnInit, OnDestroy {
       this.app.company,
       this.settings.fullName()
     );
+    this.mailSubject = `Suivi de ma candidature — ${this.app.jobTitle}`;
+    this.mailTo = this.app.contactEmail ?? '';
+    this.messageFromAi = false;
     this.messageVisible = true;
     this.copied = false;
+  }
+
+  aiWriteFollowUp(): void {
+    if (!this.app || !this.ensureAi()) {
+      return;
+    }
+    this.aiBusy.set('followup');
+    this.error = '';
+    this.integrations.aiFollowUp(this.app.id).subscribe({
+      next: (r) => {
+        this.aiBusy.set(null);
+        const name = this.settings.fullName().trim();
+        this.messagePreview = name ? r.body.replace(/\[Ton prénom\]/g, name) : r.body;
+        this.mailSubject = r.subject;
+        this.mailTo = r.to || this.app?.contactEmail || '';
+        this.messageFromAi = true;
+        this.messageVisible = true;
+        this.copied = false;
+      },
+      error: (err) => {
+        this.aiBusy.set(null);
+        this.error = err?.error?.message ?? 'La génération a échoué';
+      }
+    });
+  }
+
+  aiAnalyze(): void {
+    if (!this.app || !this.ensureAi()) {
+      return;
+    }
+    this.aiBusy.set('analysis');
+    this.error = '';
+    this.integrations.aiAnalysis(this.app.id).subscribe({
+      next: (r) => {
+        this.aiBusy.set(null);
+        this.analysis.set(parseMarkdown(r.analysis));
+        this.analysisUsedCv.set(r.usedCv === 'true');
+      },
+      error: (err) => {
+        this.aiBusy.set(null);
+        this.error = err?.error?.message ?? 'L’analyse a échoué';
+      }
+    });
+  }
+
+  sendMail(): void {
+    if (!this.app) {
+      return;
+    }
+    if (!confirm(`Envoyer ce message à ${this.mailTo} ?`)) {
+      return;
+    }
+    this.sending.set(true);
+    this.error = '';
+    this.integrations
+      .sendFollowUp(this.app.id, {
+        to: this.mailTo.trim(),
+        subject: this.mailSubject.trim(),
+        body: this.messagePreview,
+        markDone: this.markDoneOnSend && this.nextFollowUp !== null
+      })
+      .subscribe({
+        next: (app) => {
+          this.app = app;
+          this.sending.set(false);
+          this.messageVisible = false;
+          this.success = `Message envoyé à ${this.mailTo}`;
+          setTimeout(() => (this.success = ''), 3500);
+        },
+        error: (err) => {
+          this.sending.set(false);
+          this.error = err?.error?.message ?? 'Envoi impossible';
+        }
+      });
+  }
+
+  private ensureAi(): boolean {
+    if (this.aiReady()) {
+      this.aiNotice.set('');
+      return true;
+    }
+    this.aiNotice.set('Aucun assistant IA configuré : choisis un fournisseur (Ollama gratuit, Groq, Claude…) dans Paramètres.');
+    return false;
   }
 
   async copyMessage(): Promise<void> {
@@ -166,4 +286,31 @@ export class ApplicationDetailsComponent implements OnInit, OnDestroy {
         this.screenshotUrl = null;
       });
   }
+}
+
+interface AnalysisBlock {
+  type: 'h' | 'li' | 'p';
+  text?: string;
+  items?: string[];
+}
+
+/** Mini rendu Markdown (titres ##, puces -, paragraphes) sans innerHTML. */
+function parseMarkdown(md: string): AnalysisBlock[] {
+  const blocks: AnalysisBlock[] = [];
+  for (const raw of md.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const clean = (t: string) => t.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`/g, '').trim();
+    if (/^#{1,4}\s+/.test(line)) {
+      blocks.push({ type: 'h', text: clean(line.replace(/^#{1,4}\s+/, '')) });
+    } else if (/^([-*•]|\d+[.)])\s+/.test(line)) {
+      const item = clean(line.replace(/^([-*•]|\d+[.)])\s+/, ''));
+      const last = blocks[blocks.length - 1];
+      if (last?.type === 'li') last.items!.push(item);
+      else blocks.push({ type: 'li', items: [item] });
+    } else {
+      blocks.push({ type: 'p', text: clean(line) });
+    }
+  }
+  return blocks;
 }

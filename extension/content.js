@@ -473,6 +473,225 @@
     };
   }
 
+  /* ---------- Type de contrat, mode de travail, début, durée, domaine, logo ---------- */
+
+  const CONTRACT_PATTERNS = [
+    ['ALTERNANCE', /\b(alternance|alternant[e]?|apprenti(?:e|ssage)?|contrat\s+pro(?:fessionnalisation)?|work[- ]study|apprenticeship)\b/i],
+    ['STAGE', /\b(stage|stagiaire|internship|intern|pfe|projet\s+de\s+fin\s+d['’]?[ée]tudes?)\b/i],
+    ['CDD', /\b(cdd|fixed[- ]term|contrat\s+[àa]\s+dur[ée]e\s+d[ée]termin[ée]e|temporary\s+contract)\b/i],
+    ['CDI', /\b(cdi|permanent\s+contract|contrat\s+[àa]\s+dur[ée]e\s+ind[ée]termin[ée]e)\b/i],
+    ['FREELANCE', /\b(freelance|ind[ée]pendant|portage\s+salarial|contractor)\b/i]
+  ];
+
+  /** Renvoie le type dont le mot-clé apparaît le plus tôt dans le texte. */
+  function earliestContract(textValue) {
+    if (!textValue) return '';
+    let best = '';
+    let bestIndex = Infinity;
+    for (const [type, re] of CONTRACT_PATTERNS) {
+      const m = textValue.match(re);
+      if (m && m.index < bestIndex) {
+        bestIndex = m.index;
+        best = type;
+      }
+    }
+    return best;
+  }
+
+  function detectContractType(ldJob, title, header, description) {
+    const fromText =
+      earliestContract(title) || earliestContract(header) || earliestContract((description || '').slice(0, 4000));
+    if (fromText) return fromText;
+    const types = [].concat(ldJob?.employmentType || []).map((t) => String(t).toUpperCase());
+    if (types.some((t) => t.includes('INTERN'))) return 'STAGE';
+    if (types.some((t) => t.includes('TEMPORARY'))) return 'CDD';
+    if (types.some((t) => t.includes('CONTRACTOR'))) return 'FREELANCE';
+    if (types.some((t) => t.includes('FULL_TIME'))) return 'CDI';
+    return '';
+  }
+
+  const HYBRID_RE =
+    /\b(hybride?|t[ée]l[ée]travail\s+(?:partiel|possible|occasionnel|flexible)|\d\s*(?:j|jours?|days?)\s*(?:\/\s*semaine\s*)?(?:de\s+)?(?:t[ée]l[ée]travail|remote)|remote\s+partiel|partial(?:ly)?\s+remote|flex\s*office)\b/i;
+  const REMOTE_RE =
+    /(full[- ]?remote|100\s?%\s*(?:t[ée]l[ée]travail|remote|[àa]\s+distance)|t[ée]l[ée]travail\s+(?:complet|total|int[ée]gral)|enti[èe]rement\s+[àa]\s+distance|\bremote\b|[àa]\s+distance|t[ée]l[ée]travail)/i;
+  const ONSITE_RE = /\b(sur\s+site|on[- ]?site|pr[ée]sentiel|in[- ]office)\b/i;
+
+  function workModeIn(textValue) {
+    if (!textValue) return '';
+    if (HYBRID_RE.test(textValue)) return 'HYBRIDE';
+    const onsite = ONSITE_RE.test(textValue);
+    const remote = REMOTE_RE.test(textValue);
+    if (onsite && remote) return 'HYBRIDE';
+    if (remote) return 'TELETRAVAIL';
+    if (onsite) return 'SUR_SITE';
+    return '';
+  }
+
+  function detectWorkMode(ldJob, header, locationText, description) {
+    if (String(ldJob?.jobLocationType || '').toUpperCase().includes('TELECOMMUTE')) return 'TELETRAVAIL';
+    return workModeIn(header) || workModeIn(locationText) || workModeIn((description || '').slice(0, 6000));
+  }
+
+  const DURATION_VALUE =
+    '(\\d{1,2}\\s*(?:[àa\\-–]|ou|to)\\s*\\d{1,2}\\s*(?:mois|months?)|\\d{1,2}\\s*(?:mois|months?|semaines|weeks)|\\d\\s*(?:ans?|years?))';
+
+  function detectDuration(corpus) {
+    if (!corpus) return '';
+    const patterns = [
+      new RegExp(`dur[ée]e\\s*(?:du\\s+stage|du\\s+contrat|de\\s+la\\s+mission|de\\s+l['’]alternance)?\\s*[:\\-–]?\\s*(?:de\\s+)?${DURATION_VALUE}`, 'i'),
+      new RegExp(`duration\\s*[:\\-–]?\\s*${DURATION_VALUE}`, 'i'),
+      new RegExp(`(?:stage|alternance|cdd|mission|contrat|internship)\\s+(?:de\\s+|d['’]une\\s+dur[ée]e\\s+de\\s+)?${DURATION_VALUE}`, 'i'),
+      /(\d{1,2})[- ]month\s+(?:internship|contract|mission)/i
+    ];
+    for (const re of patterns) {
+      const m = corpus.match(re);
+      if (m?.[1]) {
+        const v = m[1].replace(/\s+/g, ' ').trim();
+        return /^\d{1,2}$/.test(v) ? `${v} mois` : v;
+      }
+    }
+    return '';
+  }
+
+  const MONTHS =
+    '(?:janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre|january|february|march|april|may|june|july|august|september|october|november|december)';
+
+  function detectStartDate(ldJob, corpus) {
+    if (ldJob?.jobStartDate) {
+      const d = String(ldJob.jobStartDate).slice(0, 10);
+      const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return m ? `${m[3]}/${m[2]}/${m[1]}` : d;
+    }
+    if (!corpus) return '';
+    const value = `(d[èe]s\\s+que\\s+possible|asap|imm[ée]diat(?:ement)?|\\d{1,2}[\\/.\\-]\\d{1,2}[\\/.\\-]\\d{2,4}|(?:\\d{1,2}(?:er)?\\s+)?${MONTHS}(?:\\s+\\d{4})?)`;
+    const patterns = [
+      new RegExp(`(?:date\\s+de\\s+d[ée]but|d[ée]but\\s+(?:du\\s+stage|de\\s+(?:la\\s+)?mission|du\\s+contrat|de\\s+l['’]alternance|souhait[ée])|d[ée]marrage|start(?:ing)?\\s+date|prise\\s+de\\s+poste|[àa]\\s+pourvoir|d[ée]but)\\s*[:\\-–]?\\s*(?:le\\s+|en\\s+|courant\\s+|[àa]\\s+partir\\s+d[ue]\\s+|d[èe]s\\s+)?${value}`, 'i'),
+      new RegExp(`(?:[àa]\\s+partir\\s+d[ue]|d[èe]s|starting(?:\\s+in)?|from)\\s+((?:\\d{1,2}(?:er)?\\s+)?${MONTHS}\\s+\\d{4})`, 'i')
+    ];
+    for (const re of patterns) {
+      const m = corpus.match(re);
+      if (m?.[1]) {
+        const v = m[1].replace(/\s+/g, ' ').trim();
+        return v.charAt(0).toUpperCase() + v.slice(1);
+      }
+    }
+    return '';
+  }
+
+  const DOMAIN_PATTERNS = [
+    ['Data / IA', /\b(data|donn[ée]es|machine\s+learning|ml|ia|ai|intelligence\s+artificielle|deep\s+learning|llm|nlp|genai|computer\s+vision|big\s+data|bi|power\s+bi|analytics|data\s+scien\w*)\b/i],
+    ['Cybersécurité', /\b(cyber\w*|s[ée]curit[ée]\s+(?:informatique|des\s+syst[èe]mes)|soc|pentest\w*|siem)\b/i],
+    ['DevOps / Cloud', /\b(devops|cloud|sre|kubernetes|aws|azure|gcp|infrastructure)\b/i],
+    ['Mobile', /\b(mobile|android|ios|flutter|react\s+native|swift)\b/i],
+    ['Systèmes embarqués', /\b(embarqu\w*|embedded|firmware|iot|fpga)\b/i],
+    ['Réseaux / Télécom', /\b(r[ée]seaux?|network\w*|t[ée]l[ée]com\w*|5g)\b/i],
+    ['Test / QA', /\b(qa|testeur|test\s+automation|qualit[ée]\s+logicielle)\b/i],
+    ['ERP / CRM', /\b(sap|erp|crm|salesforce|odoo)\b/i],
+    ['Gestion de projet / Produit', /\b(chef\s+de\s+projet|project\s+manager|product\s+(?:owner|manager)|scrum\s+master|pmo)\b/i],
+    ['Design / UX', /\b(ux|ui\s+designer|product\s+designer)\b/i],
+    ['Développement logiciel', /\b(d[ée]veloppe\w*|developer|software|full[- ]?stack|front[- ]?end|back[- ]?end|web|angular|react|java|spring|node(?:\.?js)?|php|\.net|python|ing[ée]nieur\s+logiciel)\b/i]
+  ];
+
+  function domainIn(textValue) {
+    if (!textValue) return '';
+    for (const [label, re] of DOMAIN_PATTERNS) {
+      if (re.test(textValue)) return label;
+    }
+    return '';
+  }
+
+  function detectDomain(ldJob, title, skills, description) {
+    const ld = ldJob?.industry || ldJob?.occupationalCategory;
+    if (typeof ld === 'string' && ld.trim() && ld.length < 80) return ld.trim();
+    return domainIn(title) || domainIn(skills) || domainIn((description || '').slice(0, 1500));
+  }
+
+  function usableImg(img) {
+    if (!img) return '';
+    const src = img.currentSrc || img.src || img.getAttribute('data-delayed-url') || '';
+    if (!/^https?:\/\//i.test(src)) return '';
+    if (/ghost|placeholder|spacer|blank\.gif/i.test(src)) return '';
+    const w = img.naturalWidth || img.width || 0;
+    if (w && w < 12) return '';
+    return src;
+  }
+
+  function firstImg(selectors) {
+    for (const sel of selectors) {
+      try {
+        for (const img of document.querySelectorAll(sel)) {
+          const src = usableImg(img);
+          if (src) return src;
+        }
+      } catch {
+        /* sélecteur invalide : ignorer */
+      }
+    }
+    return '';
+  }
+
+  function detectLogo(hostname, ldJob, company) {
+    const org = ldJob?.hiringOrganization;
+    let ldLogo = org?.logo;
+    if (ldLogo && typeof ldLogo === 'object') ldLogo = ldLogo.url || ldLogo.contentUrl || '';
+    if (typeof ldLogo === 'string' && /^https?:\/\//i.test(ldLogo)) return ldLogo;
+
+    let siteLogo = '';
+    if (hostname.includes('linkedin.com')) {
+      siteLogo = firstImg([
+        '.job-details-jobs-unified-top-card__container--two-pane a[href*="/company/"] img',
+        '.jobs-unified-top-card a[href*="/company/"] img',
+        '.job-details-jobs-unified-top-card__company-logo img',
+        '.jobs-search__job-details--container a[href*="/company/"] img',
+        '.jobs-company__box img',
+        'a[href*="/company/"] img.evi-image',
+        'a[href*="/company/"] img'
+      ]);
+    } else if (hostname.includes('indeed.')) {
+      siteLogo = firstImg([
+        '[data-testid="jobsearch-CompanyAvatar-image"]',
+        'img.jobsearch-CompanyAvatar-image',
+        '[data-testid="jobsearch-JobInfoHeader-logo"] img',
+        'img.jobsearch-JobInfoHeader-logo'
+      ]);
+    } else if (hostname.includes('welcometothejungle.')) {
+      siteLogo = firstImg([
+        '[data-testid="job-header-organization-logo"] img',
+        'a[href*="/companies/"] img',
+        'header img'
+      ]);
+    }
+    if (siteLogo) return siteLogo;
+
+    // Générique : une image dont le texte alternatif contient le nom de l'entreprise ou "logo"
+    const name = (company || '').toLowerCase().trim();
+    const imgs = Array.from(document.querySelectorAll('img[alt]'));
+    const byName = name
+      ? imgs.find((img) => (img.alt || '').toLowerCase().includes(name) && usableImg(img) && (img.naturalWidth || img.width || 0) <= 400)
+      : null;
+    if (byName) return usableImg(byName);
+    const byLogo = imgs.find(
+      (img) => /logo/i.test(img.alt || '') && (!name || (img.alt || '').toLowerCase().includes(name)) && usableImg(img)
+    );
+    return byLogo ? usableImg(byLogo) : '';
+  }
+
+  function headerText(hostname) {
+    if (hostname.includes('linkedin.com')) {
+      return [
+        firstText(['.job-details-jobs-unified-top-card__container--two-pane', '.jobs-unified-top-card', '.job-details-jobs-unified-top-card__primary-description-container']),
+        firstText(['.job-details-preferences-and-skills', '.job-details-fit-level-preferences', '.jobs-unified-top-card__job-insight'])
+      ].join(' · ');
+    }
+    if (hostname.includes('indeed.')) {
+      return firstText(['#jobDetailsSection', '[data-testid="jobsearch-OtherJobDetailsContainer"]', '.jobsearch-JobInfoHeader-subtitle']);
+    }
+    if (hostname.includes('welcometothejungle.')) {
+      return firstText(['[data-testid="job-metadata-block"]', '[data-testid="job-header"]', 'header']);
+    }
+    return '';
+  }
+
   function pick(...values) {
     for (const v of values) {
       if (v != null && String(v).trim()) return String(v).trim();
@@ -522,15 +741,28 @@
 
   const contacts = extractContactsAndSkills(descriptionValue);
 
+  const ldJob = getJsonLdJobs()[0] || null;
+  const jobTitleValue = pick(data.jobTitle, jsonLd?.jobTitle, fallback.jobTitle);
+  const companyValue = pick(data.company, jsonLd?.company, fallback.company);
+  const skillsValue = pick(jsonLd?.skills, data.skills, contacts.skills);
+  const header = headerText(hostname);
+  const metaCorpus = `${header}\n${descriptionValue}`;
+
   return {
-    jobTitle: pick(data.jobTitle, jsonLd?.jobTitle, fallback.jobTitle),
-    company: pick(data.company, jsonLd?.company, fallback.company),
+    jobTitle: jobTitleValue,
+    company: companyValue,
     jobUrl,
     location: locationValue,
+    contractType: detectContractType(ldJob, jobTitleValue, header, descriptionValue),
+    workMode: detectWorkMode(ldJob, header, locationValue, descriptionValue),
+    startDate: detectStartDate(ldJob, metaCorpus),
+    duration: detectDuration(metaCorpus),
+    domain: detectDomain(ldJob, jobTitleValue, skillsValue, descriptionValue),
+    companyLogoUrl: detectLogo(hostname, ldJob, companyValue),
     description: descriptionValue,
     platform: detectPlatform(hostname),
     reference: referenceValue,
-    skills: pick(jsonLd?.skills, data.skills, contacts.skills),
+    skills: skillsValue,
     importantElements: contacts.importantElements || '',
     contactName: pick(jsonLd?.contactName, contacts.contactName),
     contactEmail: pick(jsonLd?.contactEmail, contacts.contactEmail),

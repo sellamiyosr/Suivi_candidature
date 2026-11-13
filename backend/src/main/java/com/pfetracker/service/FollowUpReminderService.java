@@ -39,17 +39,12 @@ public class FollowUpReminderService {
     /** Job quotidien : un digest par utilisateur ayant des relances dues non notifiées. */
     @Transactional
     public int sendDueReminders() {
-        if (!mailService.canSend()) {
-            log.debug("Rappels e-mail ignorés (mail non configuré)");
-            return 0;
-        }
-
         LocalDate today = LocalDate.now();
         List<Application> due = applicationRepository.findFollowUpsDueForReminder(today);
         Map<Long, List<Application>> byUser = new LinkedHashMap<>();
         for (Application app : due) {
             User user = app.getUser();
-            if (user == null || !user.isEmailRemindersEnabled()) {
+            if (user == null || !user.isEmailRemindersEnabled() || !mailService.canSendFor(user)) {
                 continue;
             }
             byUser.computeIfAbsent(user.getId(), id -> new ArrayList<>()).add(app);
@@ -76,15 +71,15 @@ public class FollowUpReminderService {
     /** Envoi immédiat pour l'utilisateur connecté (test ou manuel). */
     @Transactional
     public Map<String, Object> sendNowForCurrentUser(boolean forceTest) {
-        if (!mailService.canSend()) {
-            throw new ApiException(
-                    HttpStatus.SERVICE_UNAVAILABLE,
-                    "E-mail non configuré. Définis MAIL_ENABLED=true, MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM."
-            );
-        }
-
         User user = userRepository.findById(SecurityUtils.currentUserId())
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        if (!mailService.canSendFor(user)) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "Aucun compte e-mail configuré. Ajoute ton e-mail et ton mot de passe d'application dans Paramètres."
+            );
+        }
 
         if (!user.isEmailRemindersEnabled() && !forceTest) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Les rappels e-mail sont désactivés dans ton profil");
@@ -105,7 +100,7 @@ public class FollowUpReminderService {
 
                     — PFE Tracker
                     """;
-            mailService.send(user.getEmail(), subject, body);
+            mailService.sendNotification(user, subject, body);
             return Map.of(
                     "sent", true,
                     "test", true,
@@ -169,7 +164,7 @@ public class FollowUpReminderService {
                 — PFE Tracker
                 """.formatted(n, lines);
 
-        mailService.send(user.getEmail(), subject, body);
+        mailService.sendNotification(user, subject, body);
     }
 
     private void markRemindersSent(List<Application> apps, LocalDate today) {

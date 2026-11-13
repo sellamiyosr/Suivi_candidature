@@ -80,7 +80,39 @@ label.checkbox {
   color: var(--muted);
 }
 
+.two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.company-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.company-row label {
+  flex: 1;
+}
+
+.logo-preview {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  object-fit: contain;
+  margin-bottom: 2px;
+}
+
+.logo-preview.hidden {
+  display: none;
+}
+
 input,
+select,
 textarea {
   width: 100%;
   padding: 7px 8px;

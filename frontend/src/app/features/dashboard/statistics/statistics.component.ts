@@ -66,7 +66,7 @@ export class StatisticsComponent implements AfterViewInit, OnChanges, OnDestroy 
           {
             label: 'Candidatures',
             data,
-            backgroundColor: '#6366F1',
+            backgroundColor: this.cssVar('--accent', '#0f766e'),
             borderRadius: 6,
             maxBarThickness: 36
           }
@@ -123,13 +123,13 @@ export class StatisticsComponent implements AfterViewInit, OnChanges, OnDestroy 
             label: 'Candidatures',
             data,
             backgroundColor: [
-              '#818cf8',
-              '#fb923c',
-              '#f97316',
-              '#a78bfa',
-              '#4ade80',
-              '#f87171',
-              '#94a3b8'
+              this.cssVar('--c-grey', '#8f8a7f'),
+              this.cssVar('--c-amber', '#c08a2e'),
+              this.cssVar('--c-orange', '#b9672c'),
+              this.cssVar('--c-blue', '#3e6aa8'),
+              this.cssVar('--c-green', '#2d7a52'),
+              this.cssVar('--c-red', '#b4443a'),
+              this.cssVar('--border-strong', '#d3cfc4')
             ],
             borderRadius: 6,
             maxBarThickness: 28
@@ -188,7 +188,11 @@ export class StatisticsComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   private palette(count: number): string[] {
-    const colors = ['#6366F1', '#22c55e', '#f59e0b', '#ec4899', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
+    const colors = ['#0f766e', '#2563eb', '#f59e0b', '#7c3aed', '#db2777', '#0891b2', '#ea580c', '#64748b'];
     return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
+  }
+
+  private cssVar(name: string, fallback: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
   }
 }

@@ -235,6 +235,12 @@ public class ApplicationService {
         application.setReference(trimToNull(request.getReference()));
         application.setPlatform(trimToNull(request.getPlatform()));
         application.setLocation(trimToNull(request.getLocation()));
+        application.setContractType(request.getContractType());
+        application.setWorkMode(request.getWorkMode());
+        application.setStartDate(trimToNull(request.getStartDate()));
+        application.setDuration(trimToNull(request.getDuration()));
+        application.setDomain(trimToNull(request.getDomain()));
+        application.setCompanyLogoUrl(trimToNull(request.getCompanyLogoUrl()));
         application.setDescription(trimToNull(request.getDescription()));
         application.setImportantElements(trimToNull(request.getImportantElements()));
         application.setSkills(trimToNull(request.getSkills()));

@@ -1,7 +1,9 @@
 package com.pfetracker.dto.application;
 
 import com.pfetracker.entity.ApplicationStatus;
+import com.pfetracker.entity.ContractType;
 import com.pfetracker.entity.Priority;
+import com.pfetracker.entity.WorkMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
@@ -27,6 +29,21 @@ public class ApplicationRequest {
 
     @Size(max = 255)
     private String location;
+
+    private ContractType contractType;
+    private WorkMode workMode;
+
+    @Size(max = 100)
+    private String startDate;
+
+    @Size(max = 100)
+    private String duration;
+
+    @Size(max = 255)
+    private String domain;
+
+    @Size(max = 1000)
+    private String companyLogoUrl;
 
     private String description;
     private String importantElements;
@@ -98,6 +115,54 @@ public class ApplicationRequest {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public ContractType getContractType() {
+        return contractType;
+    }
+
+    public void setContractType(ContractType contractType) {
+        this.contractType = contractType;
+    }
+
+    public WorkMode getWorkMode() {
+        return workMode;
+    }
+
+    public void setWorkMode(WorkMode workMode) {
+        this.workMode = workMode;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getCompanyLogoUrl() {
+        return companyLogoUrl;
+    }
+
+    public void setCompanyLogoUrl(String companyLogoUrl) {
+        this.companyLogoUrl = companyLogoUrl;
     }
 
     public String getDescription() {

@@ -12,6 +12,7 @@ public class AppProperties {
     private final Mail mail = new Mail();
     private final Reminder reminder = new Reminder();
     private boolean registrationEnabled = true;
+    private String encryptionKey;
 
     public Jwt getJwt() {
         return jwt;
@@ -35,6 +36,14 @@ public class AppProperties {
 
     public void setRegistrationEnabled(boolean registrationEnabled) {
         this.registrationEnabled = registrationEnabled;
+    }
+
+    public String getEncryptionKey() {
+        return encryptionKey;
+    }
+
+    public void setEncryptionKey(String encryptionKey) {
+        this.encryptionKey = encryptionKey;
     }
 
     public static class Jwt {

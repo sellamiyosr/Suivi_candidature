@@ -2,6 +2,8 @@ package com.pfetracker.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,6 +35,37 @@ public class User {
     /** Rappels e-mail pour les relances dues (vers l'email du compte). */
     @Column(name = "email_reminders_enabled", nullable = false)
     private boolean emailRemindersEnabled = true;
+
+    /* ---------- Envoi d'e-mails avec le compte de l'utilisateur (SMTP) ---------- */
+
+    @Column(name = "smtp_email", length = 255)
+    private String smtpEmail;
+
+    /** Mot de passe d'application, chiffré (AES-GCM). Jamais renvoyé au client. */
+    @Column(name = "smtp_password_enc", columnDefinition = "TEXT")
+    private String smtpPasswordEnc;
+
+    @Column(name = "smtp_host", length = 255)
+    private String smtpHost;
+
+    @Column(name = "smtp_port")
+    private Integer smtpPort;
+
+    /* ---------- Assistant IA ---------- */
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ai_provider", length = 30)
+    private AiProvider aiProvider;
+
+    @Column(name = "ai_model", length = 120)
+    private String aiModel;
+
+    @Column(name = "ai_base_url", length = 500)
+    private String aiBaseUrl;
+
+    /** Clé API chiffrée (AES-GCM). Jamais renvoyée au client. */
+    @Column(name = "ai_api_key_enc", columnDefinition = "TEXT")
+    private String aiApiKeyEnc;
 
     @PrePersist
     void onCreate() {
@@ -85,5 +118,69 @@ public class User {
 
     public void setEmailRemindersEnabled(boolean emailRemindersEnabled) {
         this.emailRemindersEnabled = emailRemindersEnabled;
+    }
+
+    public String getSmtpEmail() {
+        return smtpEmail;
+    }
+
+    public void setSmtpEmail(String smtpEmail) {
+        this.smtpEmail = smtpEmail;
+    }
+
+    public String getSmtpPasswordEnc() {
+        return smtpPasswordEnc;
+    }
+
+    public void setSmtpPasswordEnc(String smtpPasswordEnc) {
+        this.smtpPasswordEnc = smtpPasswordEnc;
+    }
+
+    public String getSmtpHost() {
+        return smtpHost;
+    }
+
+    public void setSmtpHost(String smtpHost) {
+        this.smtpHost = smtpHost;
+    }
+
+    public Integer getSmtpPort() {
+        return smtpPort;
+    }
+
+    public void setSmtpPort(Integer smtpPort) {
+        this.smtpPort = smtpPort;
+    }
+
+    public AiProvider getAiProvider() {
+        return aiProvider;
+    }
+
+    public void setAiProvider(AiProvider aiProvider) {
+        this.aiProvider = aiProvider;
+    }
+
+    public String getAiModel() {
+        return aiModel;
+    }
+
+    public void setAiModel(String aiModel) {
+        this.aiModel = aiModel;
+    }
+
+    public String getAiBaseUrl() {
+        return aiBaseUrl;
+    }
+
+    public void setAiBaseUrl(String aiBaseUrl) {
+        this.aiBaseUrl = aiBaseUrl;
+    }
+
+    public String getAiApiKeyEnc() {
+        return aiApiKeyEnc;
+    }
+
+    public void setAiApiKeyEnc(String aiApiKeyEnc) {
+        this.aiApiKeyEnc = aiApiKeyEnc;
     }
 }

@@ -1,0 +1,119 @@
+<ng-template #inlineTpl let-inlines>
+  @for (part of inlines; track $index) {
+    @switch (part.kind) {
+      @case ('bold') { <strong>{{ part.text }}</strong> }
+      @case ('code') { <code>{{ part.text }}</code> }
+      @case ('route') { <a [routerLink]="part.href" (click)="onRouteLink()">{{ part.text }}</a> }
+      @case ('url') { <a [href]="part.href" target="_blank" rel="noopener">{{ part.text }}</a> }
+      @default { {{ part.text }} }
+    }
+  }
+</ng-template>
+
+@if (open()) {
+  <section class="panel" role="dialog" aria-label="Assistant IA">
+    <header class="panel-head">
+      <span class="avatar">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l1.6 4.1 4.1 1.6-4.1 1.6L10 14l-1.6-4.2-4.1-1.6 4.1-1.6z" /><path d="M15.5 13l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" /></svg>
+      </span>
+      <div class="head-text">
+        <strong>Assistant</strong>
+        <span>Connaît tes candidatures · lecture seule</span>
+      </div>
+      @if (messages().length) {
+        <button type="button" class="head-btn" (click)="clear()" title="Nouvelle conversation" aria-label="Nouvelle conversation">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4.5h4V6M6 6l.7 10h6.6L14 6" /></svg>
+        </button>
+      }
+      <button type="button" class="head-btn" (click)="close()" title="Fermer" aria-label="Fermer">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" /></svg>
+      </button>
+    </header>
+
+    <div class="messages" #scroller>
+      @if (aiReady() === false) {
+        <div class="empty">
+          <p><strong>L'assistant n'est pas encore configuré.</strong></p>
+          <p>Choisis un fournisseur IA (Groq gratuit, Ollama local, Claude…) pour discuter avec tes données.</p>
+          <a class="btn primary" routerLink="/settings" [queryParams]="{ tab: 'ai' }" (click)="close()">Configurer l'assistant</a>
+        </div>
+      } @else if (!messages().length) {
+        <div class="empty">
+          <p class="hello">Salut 👋</p>
+          <p>Je connais tes candidatures, tes relances et tes statistiques. Pose-moi une question :</p>
+          <div class="suggestions">
+            @for (s of suggestions; track s) {
+              <button type="button" (click)="ask(s)">{{ s }}</button>
+            }
+          </div>
+        </div>
+      }
+
+      @for (m of messages(); track $index) {
+        @if (m.role === 'user') {
+          <div class="msg user">{{ m.content }}</div>
+        } @else {
+          <div class="msg bot" [class.error]="m.error">
+            @for (b of m.blocks ?? []; track $index) {
+              @switch (b.kind) {
+                @case ('h') { <p class="h"><ng-container *ngTemplateOutlet="inlineTpl; context: { $implicit: b.inlines }" /></p> }
+                @case ('ul') {
+                  <ul>
+                    @for (item of b.items; track $index) {
+                      <li><ng-container *ngTemplateOutlet="inlineTpl; context: { $implicit: item }" /></li>
+                    }
+                  </ul>
+                }
+                @case ('ol') {
+                  <ol>
+                    @for (item of b.items; track $index) {
+                      <li><ng-container *ngTemplateOutlet="inlineTpl; context: { $implicit: item }" /></li>
+                    }
+                  </ol>
+                }
+                @default { <p><ng-container *ngTemplateOutlet="inlineTpl; context: { $implicit: b.inlines }" /></p> }
+              }
+            }
+          </div>
+        }
+      }
+
+      @if (sending()) {
+        <div class="msg bot typing" aria-label="L'assistant écrit">
+          <span></span><span></span><span></span>
+        </div>
+      }
+    </div>
+
+    <form class="composer" (ngSubmit)="send()">
+      <textarea
+        #input
+        name="draft"
+        rows="1"
+        [(ngModel)]="draft"
+        (keydown)="onKeydown($event)"
+        placeholder="Pose ta question…"
+        [disabled]="aiReady() === false"
+        aria-label="Message"
+      ></textarea>
+      <button type="submit" class="send" [disabled]="!draft.trim() || sending() || aiReady() === false" aria-label="Envoyer">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 10l13-6-4.5 13-2.5-5.5z" /><path d="M9.5 11.5L16.5 4" /></svg>
+      </button>
+    </form>
+  </section>
+}
+
+<button
+  type="button"
+  class="fab"
+  [class.open]="open()"
+  (click)="toggle()"
+  [attr.aria-label]="open() ? 'Fermer l’assistant' : 'Ouvrir l’assistant IA'"
+  [title]="open() ? 'Fermer' : 'Assistant IA'"
+>
+  @if (open()) {
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" /></svg>
+  } @else {
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l1.6 4.1 4.1 1.6-4.1 1.6L10 14l-1.6-4.2-4.1-1.6 4.1-1.6z" /><path d="M15.5 13l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" /></svg>
+  }
+</button>

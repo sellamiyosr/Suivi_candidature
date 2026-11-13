@@ -13,7 +13,10 @@
           <app-status-badge [status]="app.status" />
           <span>{{ priorityLabels[app.priority] }}</span>
         </div>
-        <h1>{{ app.company }}</h1>
+        <h1 class="company-title">
+          <app-company-logo [url]="app.companyLogoUrl" [name]="app.company" [size]="40" />
+          {{ app.company }}
+        </h1>
         <p>{{ app.jobTitle }}</p>
       </div>
       <div class="header-actions">
@@ -35,21 +38,74 @@
       } @else {
         <button type="button" class="btn ghost" disabled>Relances terminées</button>
       }
-      <button type="button" class="btn ghost" (click)="generateMessage()">Générer message</button>
+      <button type="button" class="btn ghost" (click)="generateMessage()">Message type</button>
+      <button type="button" class="btn ai" [disabled]="aiBusy() !== null" (click)="aiWriteFollowUp()">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l1.6 4.1 4.1 1.6-4.1 1.6L10 14l-1.6-4.2-4.1-1.6 4.1-1.6z" /></svg>
+        {{ aiBusy() === 'followup' ? 'Rédaction…' : 'Rédiger avec l’IA' }}
+      </button>
+      <button type="button" class="btn ai" [disabled]="aiBusy() !== null" (click)="aiAnalyze()">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" /><path d="M13.2 13.2L17 17" /></svg>
+        {{ aiBusy() === 'analysis' ? 'Analyse…' : 'Analyser l’offre' }}
+      </button>
       <button type="button" class="btn ghost" [disabled]="actionLoading" (click)="recalculateMatch()">
         Recalculer le score
       </button>
     </div>
 
+    @if (aiNotice()) {
+      <div class="notice">
+        {{ aiNotice() }}
+        <a routerLink="/settings" [queryParams]="{ tab: 'ai' }">Configurer l'assistant IA →</a>
+      </div>
+    }
+
     @if (messageVisible) {
-      <article class="card message-card">
-        <div class="message-header">
-          <h2>Message de relance</h2>
-          <button type="button" class="btn primary" (click)="copyMessage()">
-            {{ copied ? 'Copié !' : 'Copier' }}
-          </button>
+      <article class="card composer">
+        <div class="composer-head">
+          <h2>Message de relance @if (messageFromAi) {<span class="ai-badge">IA</span>}</h2>
+          <button type="button" class="icon-close" (click)="messageVisible = false" aria-label="Fermer">×</button>
         </div>
-        <pre>{{ messagePreview }}</pre>
+        <div class="composer-fields">
+          <label>À<input type="email" [(ngModel)]="mailTo" placeholder="recruteur@entreprise.com" /></label>
+          <label>Objet<input [(ngModel)]="mailSubject" /></label>
+        </div>
+        <textarea [(ngModel)]="messagePreview" rows="10" aria-label="Message"></textarea>
+        <p class="composer-hint">Relis et ajuste avant d'envoyer : remplace les éléments entre crochets.</p>
+        <div class="composer-actions">
+          <button type="button" class="btn ghost" (click)="copyMessage()">{{ copied ? 'Copié !' : 'Copier' }}</button>
+          @if (mailReady()) {
+            <label class="check">
+              <input type="checkbox" [(ngModel)]="markDoneOnSend" />
+              Marquer la relance comme faite
+            </label>
+            <button type="button" class="btn primary" [disabled]="sending() || !mailTo || !mailSubject" (click)="sendMail()">
+              {{ sending() ? 'Envoi…' : 'Envoyer depuis ' + (mailFrom() || 'mon e-mail') }}
+            </button>
+          } @else {
+            <a routerLink="/settings" [queryParams]="{ tab: 'mail' }" class="setup-link">Configure ton e-mail d'envoi pour envoyer directement →</a>
+          }
+        </div>
+      </article>
+    }
+
+    @if (analysis(); as blocks) {
+      <article class="card analysis">
+        <div class="composer-head">
+          <h2>Analyse de l'offre <span class="ai-badge">IA</span></h2>
+          <button type="button" class="icon-close" (click)="analysis.set(null)" aria-label="Fermer">×</button>
+        </div>
+        @if (!analysisUsedCv()) {
+          <p class="composer-hint">Sans CV enregistré : ajoute ton CV dans Paramètres pour une analyse plus précise.</p>
+        }
+        <div class="analysis-body">
+          @for (b of blocks; track $index) {
+            @switch (b.type) {
+              @case ('h') { <h3>{{ b.text }}</h3> }
+              @case ('li') { <ul>@for (item of b.items; track $index) {<li>{{ item }}</li>}</ul> }
+              @default { <p>{{ b.text }}</p> }
+            }
+          }
+        </div>
       </article>
     }
 
@@ -61,6 +117,11 @@
           <div><dt>Plateforme</dt><dd>{{ app.platform || '—' }}</dd></div>
           <div><dt>Référence</dt><dd>{{ app.reference || '—' }}</dd></div>
           <div><dt>Localisation</dt><dd>{{ app.location || '—' }}</dd></div>
+          <div><dt>Contrat</dt><dd>{{ app.contractType ? contractLabels[app.contractType] : '—' }}</dd></div>
+          <div><dt>Mode de travail</dt><dd>{{ app.workMode ? workModeLabels[app.workMode] : '—' }}</dd></div>
+          <div><dt>Début</dt><dd>{{ app.startDate || '—' }}</dd></div>
+          <div><dt>Durée</dt><dd>{{ app.duration || '—' }}</dd></div>
+          <div><dt>Domaine</dt><dd>{{ app.domain || '—' }}</dd></div>
           <div>
             <dt>Lien</dt>
             <dd>

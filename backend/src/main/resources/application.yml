@@ -38,6 +38,10 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   registration-enabled: ${APP_REGISTRATION_ENABLED:true}
+  # Clé de chiffrement des secrets utilisateur (mot de passe SMTP, clé API IA).
+  # En production : APP_ENCRYPTION_KEY = chaîne aléatoire longue. Ne jamais la changer après coup
+  # (les secrets déjà enregistrés deviendraient illisibles).
+  encryption-key: ${APP_ENCRYPTION_KEY:}
   mail:
     enabled: ${MAIL_ENABLED:false}
     from: ${MAIL_FROM:noreply@pfetracker.local}

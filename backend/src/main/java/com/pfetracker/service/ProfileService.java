@@ -62,7 +62,7 @@ public class ProfileService {
                 user.getSkills(),
                 list,
                 user.isEmailRemindersEnabled(),
-                mailService.canSend()
+                mailService.canSendFor(user)
         );
     }
 

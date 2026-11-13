@@ -21,6 +21,13 @@ const els = {
   jobUrl: document.getElementById('jobUrl'),
   platform: document.getElementById('platform'),
   location: document.getElementById('location'),
+  contractType: document.getElementById('contractType'),
+  workMode: document.getElementById('workMode'),
+  startDate: document.getElementById('startDate'),
+  duration: document.getElementById('duration'),
+  domain: document.getElementById('domain'),
+  companyLogoUrl: document.getElementById('companyLogoUrl'),
+  logoPreview: document.getElementById('logo-preview'),
   reference: document.getElementById('reference'),
   description: document.getElementById('description'),
   skills: document.getElementById('skills'),
@@ -175,6 +182,12 @@ els.btnSubmit.addEventListener('click', async () => {
     jobUrl: els.jobUrl.value.trim() || null,
     platform: els.platform.value.trim() || null,
     location: els.location.value.trim() || null,
+    contractType: els.contractType.value || null,
+    workMode: els.workMode.value || null,
+    startDate: els.startDate.value.trim() || null,
+    duration: els.duration.value.trim() || null,
+    domain: els.domain.value.trim() || null,
+    companyLogoUrl: els.companyLogoUrl.value.trim() || null,
     reference: els.reference.value.trim() || null,
     description: els.description.value.trim() || null,
     skills: els.skills.value.trim() || null,
@@ -225,12 +238,33 @@ els.btnSubmit.addEventListener('click', async () => {
   }
 });
 
+function updateLogoPreview() {
+  const url = els.companyLogoUrl.value.trim();
+  if (/^https?:\/\//i.test(url)) {
+    els.logoPreview.src = url;
+    els.logoPreview.classList.remove('hidden');
+  } else {
+    els.logoPreview.removeAttribute('src');
+    els.logoPreview.classList.add('hidden');
+  }
+}
+
+els.companyLogoUrl.addEventListener('change', updateLogoPreview);
+els.logoPreview.addEventListener('error', () => els.logoPreview.classList.add('hidden'));
+
 function fillForm(data) {
   els.company.value = data.company || '';
   els.jobTitle.value = data.jobTitle || '';
   els.jobUrl.value = data.jobUrl || '';
   els.platform.value = data.platform || '';
   els.location.value = data.location || '';
+  els.contractType.value = data.contractType || '';
+  els.workMode.value = data.workMode || '';
+  els.startDate.value = data.startDate || '';
+  els.duration.value = data.duration || '';
+  els.domain.value = data.domain || '';
+  els.companyLogoUrl.value = data.companyLogoUrl || '';
+  updateLogoPreview();
   els.reference.value = data.reference || '';
   els.description.value = data.description || '';
   els.skills.value = data.skills || '';

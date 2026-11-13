@@ -2,7 +2,18 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
+  CONTRACT_OPTIONS,
+  Option,
+  PRIORITY_OPTIONS,
+  STATUS_OPTIONS,
+  WORK_MODE_OPTIONS,
+  ALL_CONTRACTS,
   ALL_STATUSES,
+  ALL_WORK_MODES,
+  CONTRACT_LABELS,
+  ContractType,
+  WORK_MODE_LABELS,
+  WorkMode,
   ApplicationRequest,
   ApplicationStatus,
   Priority,
@@ -11,11 +22,13 @@ import {
 } from '../../../core/models/application.model';
 import { ApplicationService } from '../../../core/services/application.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { SelectComponent } from '../../../shared/select/select.component';
+import { CompanyLogoComponent } from '../../../shared/company-logo/company-logo.component';
 
 @Component({
   selector: 'app-application-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, SelectComponent, CompanyLogoComponent],
   templateUrl: './application-form.component.html',
   styleUrl: './application-form.component.scss'
 })
@@ -36,6 +49,14 @@ export class ApplicationFormComponent implements OnInit {
   readonly statusLabels = STATUS_LABELS;
   readonly priorities: Priority[] = ['BASSE', 'MOYENNE', 'HAUTE'];
   readonly priorityLabels = PRIORITY_LABELS;
+  readonly contracts = ALL_CONTRACTS;
+  readonly contractLabels = CONTRACT_LABELS;
+  readonly workModes = ALL_WORK_MODES;
+  readonly workModeLabels = WORK_MODE_LABELS;
+  readonly contractOptions: Option[] = [{ value: '', label: 'Non précisé' }, ...CONTRACT_OPTIONS];
+  readonly workModeOptions: Option[] = [{ value: '', label: 'Non précisé' }, ...WORK_MODE_OPTIONS];
+  readonly statusOptions = STATUS_OPTIONS;
+  readonly priorityOptions = PRIORITY_OPTIONS;
 
   readonly form = this.fb.group({
     company: ['', Validators.required],
@@ -44,6 +65,12 @@ export class ApplicationFormComponent implements OnInit {
     reference: [''],
     platform: [''],
     location: [''],
+    contractType: [''],
+    workMode: [''],
+    startDate: [''],
+    duration: [''],
+    domain: [''],
+    companyLogoUrl: [''],
     description: [''],
     importantElements: [''],
     skills: [''],
@@ -57,6 +84,22 @@ export class ApplicationFormComponent implements OnInit {
     followUp2Date: [''],
     notes: ['']
   });
+
+  isInvalid(name: 'company' | 'jobTitle'): boolean {
+    const c = this.form.controls[name];
+    return c.invalid && (c.touched || c.dirty);
+  }
+
+  /** Ouvre la section "Contact" si elle contient déjà quelque chose. */
+  hasContact(): boolean {
+    const v = this.form.value;
+    return !!(v.contactName || v.contactEmail || v.contactLinkedin);
+  }
+
+  hasExtras(): boolean {
+    const v = this.form.value;
+    return !!(v.importantElements || v.notes);
+  }
 
   get isEdit(): boolean {
     return this.editId !== null;
@@ -75,6 +118,12 @@ export class ApplicationFormComponent implements OnInit {
             reference: app.reference ?? '',
             platform: app.platform ?? '',
             location: app.location ?? '',
+            contractType: app.contractType ?? '',
+            workMode: app.workMode ?? '',
+            startDate: app.startDate ?? '',
+            duration: app.duration ?? '',
+            domain: app.domain ?? '',
+            companyLogoUrl: app.companyLogoUrl ?? '',
             description: app.description ?? '',
             importantElements: app.importantElements ?? '',
             skills: app.skills ?? '',
@@ -136,6 +185,12 @@ export class ApplicationFormComponent implements OnInit {
       reference: raw.reference || null,
       platform: raw.platform || null,
       location: raw.location || null,
+      contractType: (raw.contractType || null) as ContractType | null,
+      workMode: (raw.workMode || null) as WorkMode | null,
+      startDate: raw.startDate || null,
+      duration: raw.duration || null,
+      domain: raw.domain || null,
+      companyLogoUrl: raw.companyLogoUrl || null,
       description: raw.description || null,
       importantElements: raw.importantElements || null,
       skills: raw.skills || null,

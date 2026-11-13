@@ -2,127 +2,227 @@
   <header class="page-header">
     <div>
       <h1>Paramètres</h1>
-      <p>Profil, préférences et CV pour le score de compatibilité</p>
+      <p>Ton profil, ton CV, tes intégrations et l'apparence de l'application.</p>
     </div>
   </header>
 
-  <form class="card form" (ngSubmit)="save()">
-    <label>
-      Nom complet
-      <input [(ngModel)]="fullName" name="fullName" placeholder="Prénom Nom" />
-      <small>Utilisé pour générer les messages de relance</small>
-    </label>
-
-    <label>
-      Compétences / mots-clés
-      <textarea
-        [(ngModel)]="skillsText"
-        (ngModelChange)="onSkillsTextChange($event)"
-        name="skills"
-        rows="4"
-        placeholder="Ex. Java, Spring Boot, Angular, Docker…"
-      ></textarea>
-      <small>Remplies automatiquement à l’upload du CV (dictionnaire ATS). Tu peux les modifier.</small>
-    </label>
-
-    @if (skillsList.length) {
-      <div class="skill-chips" aria-label="Compétences détectées">
-        @for (skill of skillsList; track skill) {
-          <span class="chip">{{ skill }}</span>
-        }
-      </div>
-    }
-
-    <div class="row">
-      <span>Thème</span>
-      <button type="button" class="btn ghost" (click)="theme.toggle()">
-        {{ theme.theme() === 'light' ? 'Passer en sombre' : 'Passer en clair' }}
-      </button>
-    </div>
-
-    <fieldset class="reminders">
-      <legend>Rappels e-mail (relances)</legend>
-      <label class="check">
-        <input type="checkbox" [(ngModel)]="emailRemindersEnabled" name="emailReminders" />
-        Recevoir un e-mail le jour d’une relance
-      </label>
-      <small>
-        Envoyé à
-        <strong>{{ accountEmail || 'ton compte' }}</strong>
-        (pas au recruteur). Heure par défaut : 8h (Europe/Paris).
-      </small>
-      @if (!mailConfigured) {
-        <p class="warn">
-          SMTP non configuré sur le serveur — ajoute
-          <code>MAIL_ENABLED=true</code>,
-          <code>MAIL_HOST</code>,
-          <code>MAIL_USERNAME</code>,
-          <code>MAIL_PASSWORD</code>,
-          <code>MAIL_FROM</code>
-          puis redémarre le backend.
-        </p>
-      } @else {
+  <div class="layout">
+    <!-- ================= Menu des sections ================= -->
+    <nav class="tabs" aria-label="Sections des paramètres">
+      @for (t of tabs; track t.id) {
         <button
           type="button"
-          class="btn ghost"
-          (click)="sendTestReminder()"
-          [disabled]="reminderLoading"
+          class="tab"
+          [class.active]="tab() === t.id"
+          [attr.aria-current]="tab() === t.id ? 'page' : null"
+          (click)="selectTab(t.id)"
         >
-          {{ reminderLoading ? 'Envoi…' : 'Envoyer un e-mail de test' }}
+          <svg class="tab-icon" viewBox="0 0 20 20" aria-hidden="true">
+            @switch (t.id) {
+              @case ('profile') { <circle cx="10" cy="7" r="3.2" /><path d="M3.8 17a6.2 6.2 0 0 1 12.4 0" /> }
+              @case ('cv') { <path d="M5 2.8h6.5L15 6.3V17a.8.8 0 0 1-.8.8H5.8A.8.8 0 0 1 5 17z" /><path d="M11.5 2.8v3.5H15M7.5 10.5h5M7.5 13.5h5" /> }
+              @case ('mail') { <rect x="2.5" y="4.5" width="15" height="11" rx="2" /><path d="M3 5.5l7 5.5 7-5.5" /> }
+              @case ('ai') { <path d="M10 2.5l1.6 4.1 4.1 1.6-4.1 1.6L10 14l-1.6-4.2-4.1-1.6 4.1-1.6z" /><path d="M15.5 13l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" /> }
+              @case ('appearance') { <circle cx="10" cy="10" r="7" /><path d="M10 3a7 7 0 0 0 0 14z" /> }
+            }
+          </svg>
+          <span class="tab-text">
+            <span class="tab-label">{{ t.label }}</span>
+            <span class="tab-sub">{{ t.sub }}</span>
+          </span>
         </button>
       }
-      @if (reminderMessage) {
-        <p class="ok">{{ reminderMessage }}</p>
+    </nav>
+
+    <!-- ================= Contenu ================= -->
+    <div class="content">
+      @if (globalError) {
+        <div class="alert">{{ globalError }}</div>
       }
-    </fieldset>
 
-    <button type="submit" class="btn primary">Enregistrer</button>
-    @if (saved) {
-      <span class="ok">Enregistré</span>
-    }
-  </form>
+      @switch (tab()) {
+        <!-- ---------- Profil ---------- -->
+        @case ('profile') {
+          <section class="card block">
+            <div class="block-head">
+              <div>
+                <h2>Profil</h2>
+                <p>Ces informations servent à personnaliser tes messages de relance.</p>
+              </div>
+            </div>
 
-  <section class="card form cv-card">
-    <h2>Mon CV (PDF)</h2>
-    <p class="hint">
-      À l’upload, le texte du PDF est lu et les compétences reconnues remplissent ton profil.
-      Estimation de compatibilité type ATS — aucun ATS réel n'est interrogé.
-    </p>
+            <label>
+              Nom complet
+              <input [(ngModel)]="fullName" name="fullName" placeholder="Prénom Nom" />
+              <span class="help">Remplace « [Ton prénom] » dans la signature des messages.</span>
+            </label>
 
-    @if (cvError) {
-      <div class="alert">{{ cvError }}</div>
-    }
-    @if (cvMessage) {
-      <p class="ok">{{ cvMessage }}</p>
-    }
+            <label>
+              Compétences / mots-clés
+              <textarea
+                [(ngModel)]="skillsText"
+                (ngModelChange)="onSkillsTextChange($event)"
+                name="skills"
+                rows="3"
+                placeholder="Ex. Java, Spring Boot, Angular, Docker…"
+              ></textarea>
+              <span class="help">Remplies automatiquement depuis ton CV ; utilisées pour le score de compatibilité.</span>
+            </label>
 
-    @if (cv) {
-      <div class="cv-info">
-        <div>
-          <strong>{{ cv.fileName }}</strong>
-          <small>Uploadé le {{ cv.uploadedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
-          @if (cv.warning) {
-            <p class="warn">{{ cv.warning }}</p>
-          }
-          @if (cv.detectedSkills?.length) {
-            <p class="detected">{{ cv.detectedSkills.length }} mot(s)-clé détecté(s) dans le CV</p>
-          }
-        </div>
-        <div class="cv-actions">
-          <button type="button" class="btn ghost" (click)="downloadCv()">Télécharger</button>
-          <button type="button" class="btn danger" (click)="deleteCv()">Supprimer</button>
-        </div>
-      </div>
-    } @else {
-      <p class="muted">Aucun CV enregistré.</p>
-    }
+            @if (skillsList.length) {
+              <div class="chips" aria-label="Compétences">
+                @for (skill of skillsList; track skill) {
+                  <span class="chip">{{ skill }}</span>
+                }
+                <span class="chip-count">{{ skillsList.length }} compétence{{ skillsList.length > 1 ? 's' : '' }}</span>
+              </div>
+            }
 
-    <label class="btn ghost file-btn">
-      {{ cv ? 'Remplacer le CV' : 'Uploader un CV PDF' }}
-      <input type="file" accept="application/pdf,.pdf" hidden (change)="onCvSelected($event)" [disabled]="cvLoading" />
-    </label>
-    @if (cvLoading) {
-      <span class="muted">Lecture du CV…</span>
-    }
-  </section>
+            <div class="actions">
+              <button type="button" class="btn primary" (click)="saveProfile()" [disabled]="profileSaving">
+                {{ profileSaving ? 'Enregistrement…' : 'Enregistrer le profil' }}
+              </button>
+              @if (saved) {
+                <span class="saved">✓ Enregistré</span>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- ---------- CV ---------- -->
+        @case ('cv') {
+          <section class="card block">
+            <div class="block-head">
+              <div>
+                <h2>Mon CV</h2>
+                <p>Le texte du PDF est lu pour remplir tes compétences et calculer la compatibilité avec les offres.</p>
+              </div>
+            </div>
+
+            @if (cvError) {
+              <div class="alert">{{ cvError }}</div>
+            }
+            @if (cvMessage) {
+              <p class="feedback">{{ cvMessage }}</p>
+            }
+
+            @if (cv) {
+              <div class="file">
+                <span class="file-icon">PDF</span>
+                <div class="file-info">
+                  <strong>{{ cv.fileName }}</strong>
+                  <span>Ajouté le {{ cv.uploadedAt | date: 'dd/MM/yyyy à HH:mm' }}</span>
+                  @if (cv.detectedSkills.length) {
+                    <span class="ok-text">{{ cv.detectedSkills.length }} mot(s)-clé détecté(s)</span>
+                  }
+                  @if (cv.warning) {
+                    <span class="warn-text">{{ cv.warning }}</span>
+                  }
+                </div>
+                <div class="file-actions">
+                  <button type="button" class="btn ghost small" (click)="downloadCv()">Télécharger</button>
+                  <button type="button" class="btn danger small" (click)="deleteCv()">Supprimer</button>
+                </div>
+              </div>
+            }
+
+            <label class="drop" [class.busy]="cvLoading">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5" /><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15" /></svg>
+              @if (cvLoading) {
+                <span>Lecture du CV…</span>
+              } @else {
+                <span><strong>{{ cv ? 'Remplacer le CV' : 'Choisir un CV' }}</strong> (PDF)</span>
+              }
+              <input type="file" accept="application/pdf,.pdf" hidden (change)="onCvSelected($event)" [disabled]="cvLoading" />
+            </label>
+            <p class="help">Estimation type ATS par mots-clés, aucun vrai ATS n'est interrogé.</p>
+          </section>
+        }
+
+        <!-- ---------- E-mail ---------- -->
+        @case ('mail') {
+          <app-integrations section="mail" />
+
+          <section class="card block">
+            <div class="block-head">
+              <div>
+                <h2>Rappels de relance</h2>
+                <p>Un e-mail envoyé à {{ accountEmail || 'ton compte' }} le jour où une relance est prévue (8h).</p>
+              </div>
+            </div>
+
+            <label class="switch-row">
+              <span class="switch">
+                <input type="checkbox" [(ngModel)]="emailRemindersEnabled" (ngModelChange)="saveReminders()" />
+                <span class="slider"></span>
+              </span>
+              <span>Recevoir les rappels par e-mail</span>
+            </label>
+
+            @if (!mailConfigured) {
+              <p class="help">Configure ton e-mail d'envoi ci-dessus pour activer les rappels.</p>
+            } @else {
+              <div class="actions">
+                <button type="button" class="btn ghost" (click)="sendTestReminder()" [disabled]="reminderLoading">
+                  {{ reminderLoading ? 'Envoi…' : 'Envoyer un rappel maintenant' }}
+                </button>
+              </div>
+            }
+            @if (reminderMessage) {
+              <p class="feedback">{{ reminderMessage }}</p>
+            }
+          </section>
+        }
+
+        <!-- ---------- IA ---------- -->
+        @case ('ai') {
+          <app-integrations section="ai" />
+        }
+
+        <!-- ---------- Apparence ---------- -->
+        @case ('appearance') {
+          <section class="card block">
+            <div class="block-head">
+              <div>
+                <h2>Apparence</h2>
+                <p>Le thème et la couleur sont enregistrés sur cet appareil.</p>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Thème</span>
+              <div class="segmented" role="radiogroup" aria-label="Thème">
+                <button type="button" role="radio" [class.on]="theme.theme() === 'light'" [attr.aria-checked]="theme.theme() === 'light'" (click)="setTheme('light')">
+                  ☀ Clair
+                </button>
+                <button type="button" role="radio" [class.on]="theme.theme() === 'dark'" [attr.aria-checked]="theme.theme() === 'dark'" (click)="setTheme('dark')">
+                  ☾ Sombre
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Couleur principale</span>
+              <div class="swatches" role="radiogroup" aria-label="Couleur principale">
+                @for (a of accents; track a.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="swatch"
+                    [class.on]="theme.accent() === a.id"
+                    [attr.aria-checked]="theme.accent() === a.id"
+                    [title]="a.label"
+                    (click)="theme.setAccent(a.id)"
+                  >
+                    <span class="swatch-dot" [style.background]="a.swatch"></span>
+                    <span>{{ a.label }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </section>
+        }
+      }
+    </div>
+  </div>
 </section>

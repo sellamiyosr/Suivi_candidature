@@ -1,35 +1,59 @@
 import { Component, Input } from '@angular/core';
 
+/** Score de compatibilité : chiffre + barre fine. */
 @Component({
   selector: 'app-score-badge',
   standalone: true,
   template: `
     @if (insufficient) {
-      <span class="score insufficient" title="Description insuffisante pour un score fiable">N/A</span>
+      <span class="score empty" title="Description insuffisante pour un score fiable">n/a</span>
     } @else if (score === null || score === undefined) {
       <span class="score empty">—</span>
     } @else {
-      <span class="score" [attr.data-level]="level">{{ score }}%</span>
+      <span class="score" [attr.data-level]="level" [title]="'Compatibilité estimée : ' + score + '%'">
+        <span class="value">{{ score }}<small>%</small></span>
+        <span class="bar"><span class="fill" [style.width.%]="score"></span></span>
+      </span>
     }
   `,
   styles: `
     .score {
       display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 2.75rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 700;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 2.6rem;
     }
-    .score.empty, .score.insufficient { background: var(--surface-2); color: var(--muted); }
-    .score[data-level='low'] { background: #fee2e2; color: #b91c1c; }
-    .score[data-level='mid'] { background: #ffedd5; color: #c2410c; }
-    .score[data-level='high'] { background: #dcfce7; color: #166534; }
-    :host-context([data-theme='dark']) .score[data-level='low'] { background: #7f1d1d; color: #fecaca; }
-    :host-context([data-theme='dark']) .score[data-level='mid'] { background: #7c2d12; color: #fed7aa; }
-    :host-context([data-theme='dark']) .score[data-level='high'] { background: #14532d; color: #bbf7d0; }
+    .value {
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+    small {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .bar {
+      display: block;
+      width: 2.6rem;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+    .fill {
+      display: block;
+      height: 100%;
+      background: var(--c-grey);
+    }
+    .score[data-level='low'] .fill { background: var(--c-red); }
+    .score[data-level='mid'] .fill { background: var(--c-amber); }
+    .score[data-level='high'] .fill { background: var(--c-green); }
+    .score.empty {
+      color: var(--faint);
+      font-size: 0.82rem;
+    }
   `
 })
 export class ScoreBadgeComponent {

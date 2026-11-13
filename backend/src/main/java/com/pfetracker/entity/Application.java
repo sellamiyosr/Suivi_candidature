@@ -47,6 +47,28 @@ public class Application {
     @Column(length = 255)
     private String location;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "contract_type", length = 20)
+    private ContractType contractType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_mode", length = 20)
+    private WorkMode workMode;
+
+    /** Texte libre : "Février 2027", "ASAP", "03/02/2027"… */
+    @Column(name = "start_date", length = 100)
+    private String startDate;
+
+    /** Texte libre : "6 mois", "4 à 6 mois"… */
+    @Column(length = 100)
+    private String duration;
+
+    @Column(length = 255)
+    private String domain;
+
+    @Column(name = "company_logo_url", length = 1000)
+    private String companyLogoUrl;
+
     @Lob
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -205,6 +227,54 @@ public class Application {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public ContractType getContractType() {
+        return contractType;
+    }
+
+    public void setContractType(ContractType contractType) {
+        this.contractType = contractType;
+    }
+
+    public WorkMode getWorkMode() {
+        return workMode;
+    }
+
+    public void setWorkMode(WorkMode workMode) {
+        this.workMode = workMode;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getCompanyLogoUrl() {
+        return companyLogoUrl;
+    }
+
+    public void setCompanyLogoUrl(String companyLogoUrl) {
+        this.companyLogoUrl = companyLogoUrl;
     }
 
     public String getDescription() {

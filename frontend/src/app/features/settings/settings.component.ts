@@ -1,17 +1,19 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CvInfo } from '../../core/models/application.model';
 import { ApplicationService } from '../../core/services/application.service';
 import { CvService } from '../../core/services/cv.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { SettingsService } from '../../core/services/settings.service';
-import { ThemeService } from '../../core/services/theme.service';
+import { ACCENTS, ThemeMode, ThemeService } from '../../core/services/theme.service';
+import { IntegrationsComponent } from './integrations/integrations.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, IntegrationsComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
@@ -21,6 +23,20 @@ export class SettingsComponent implements OnInit {
   private readonly cvService = inject(CvService);
   private readonly profileService = inject(ProfileService);
   private readonly applicationService = inject(ApplicationService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  readonly tabs: { id: SettingsTab; label: string; sub: string }[] = [
+    { id: 'profile', label: 'Profil', sub: 'Nom et compétences' },
+    { id: 'cv', label: 'CV', sub: 'PDF et compatibilité' },
+    { id: 'mail', label: 'E-mail', sub: 'Envoi et rappels' },
+    { id: 'ai', label: 'Assistant IA', sub: 'Fournisseur et clé' },
+    { id: 'appearance', label: 'Apparence', sub: 'Thème et couleur' }
+  ];
+  readonly tab = signal<SettingsTab>('profile');
+  readonly accents = ACCENTS;
+  profileSaving = false;
+  globalError = '';
 
   fullName = this.settings.fullName();
   accountEmail = '';
@@ -37,33 +53,62 @@ export class SettingsComponent implements OnInit {
   cvMessage = '';
 
   ngOnInit(): void {
+    const requested = this.route.snapshot.queryParamMap.get('tab') as SettingsTab | null;
+    if (requested && this.tabs.some((t) => t.id === requested)) {
+      this.tab.set(requested);
+    }
     this.loadProfile();
     this.loadCv();
   }
 
-  save(): void {
+  selectTab(id: SettingsTab): void {
+    this.tab.set(id);
+    this.globalError = '';
+    // Garde l'onglet dans l'URL (lien direct, retour arrière)
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: id }, replaceUrl: true });
+  }
+
+  setTheme(mode: ThemeMode): void {
+    if (this.theme.theme() !== mode) {
+      this.theme.toggle();
+    }
+  }
+
+  saveProfile(): void {
     this.settings.setFullName(this.fullName);
-    this.profileService
-      .update({
-        skills: this.skillsText,
-        emailRemindersEnabled: this.emailRemindersEnabled
-      })
-      .subscribe({
-        next: (profile) => {
-          this.applyProfile(profile);
-          this.saved = true;
-          setTimeout(() => (this.saved = false), 2000);
-        },
-        error: (err) => {
-          this.cvError = err?.error?.message ?? 'Enregistrement du profil impossible';
-        }
-      });
+    this.profileSaving = true;
+    this.globalError = '';
+    this.profileService.update({ skills: this.skillsText }).subscribe({
+      next: (profile) => {
+        this.applyProfile(profile);
+        this.profileSaving = false;
+        this.saved = true;
+        setTimeout(() => (this.saved = false), 2000);
+      },
+      error: (err) => {
+        this.profileSaving = false;
+        this.globalError = err?.error?.message ?? 'Enregistrement du profil impossible';
+      }
+    });
+  }
+
+  saveReminders(): void {
+    this.profileService.update({ emailRemindersEnabled: this.emailRemindersEnabled }).subscribe({
+      next: (profile) => {
+        this.applyProfile(profile);
+        this.reminderMessage = this.emailRemindersEnabled ? 'Rappels activés.' : 'Rappels désactivés.';
+      },
+      error: (err) => {
+        this.emailRemindersEnabled = !this.emailRemindersEnabled;
+        this.globalError = err?.error?.message ?? 'Modification impossible';
+      }
+    });
   }
 
   sendTestReminder(): void {
     this.reminderLoading = true;
     this.reminderMessage = '';
-    this.cvError = '';
+    this.globalError = '';
     this.profileService.sendReminderNow(true).subscribe({
       next: (res) => {
         this.reminderLoading = false;
@@ -71,7 +116,7 @@ export class SettingsComponent implements OnInit {
       },
       error: (err) => {
         this.reminderLoading = false;
-        this.cvError = err?.error?.message ?? 'Envoi du rappel impossible';
+        this.globalError = err?.error?.message ?? 'Envoi du rappel impossible';
       }
     });
   }
@@ -216,3 +261,5 @@ export class SettingsComponent implements OnInit {
     return err?.message ?? '';
   }
 }
+
+type SettingsTab = 'profile' | 'cv' | 'mail' | 'ai' | 'appearance';

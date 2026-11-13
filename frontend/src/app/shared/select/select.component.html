@@ -1,0 +1,52 @@
+<button
+  #trigger
+  type="button"
+  class="trigger"
+  [class.open]="open()"
+  [class.has-value]="hasValue"
+  [attr.data-status]="variant === 'pill' ? current() : null"
+  [disabled]="isDisabled()"
+  [attr.aria-label]="ariaLabel || null"
+  aria-haspopup="listbox"
+  [attr.aria-expanded]="open()"
+  (click)="toggle($event)"
+  (keydown)="onKeydown($event)"
+>
+  @if (selected?.dot) {
+    <span class="dot" [attr.data-status]="selected!.dot"></span>
+  } @else if (selected?.color) {
+    <span class="dot" [style.background]="selected!.color"></span>
+  }
+  <span class="text" [class.placeholder]="!hasValue">
+    {{ hasValue ? selected!.label : placeholder }}
+  </span>
+  <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true">
+    <path d="M4 6l4 4 4-4" />
+  </svg>
+</button>
+
+@if (open()) {
+  <ul class="panel" role="listbox" [style]="panelStyle()" (click)="$event.stopPropagation()">
+    @for (opt of options; track opt.value; let i = $index) {
+      <li
+        role="option"
+        class="option"
+        [class.active]="i === activeIndex()"
+        [class.selected]="opt.value === current()"
+        [attr.aria-selected]="opt.value === current()"
+        (mouseenter)="activeIndex.set(i)"
+        (click)="choose(opt, $event)"
+      >
+        @if (opt.dot) {
+          <span class="dot" [attr.data-status]="opt.dot"></span>
+        } @else if (opt.color) {
+          <span class="dot" [style.background]="opt.color"></span>
+        }
+        <span class="option-label">{{ opt.label }}</span>
+        @if (opt.value === current()) {
+          <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10.5l3 3 7-7" /></svg>
+        }
+      </li>
+    }
+  </ul>
+}

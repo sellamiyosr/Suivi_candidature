@@ -41,11 +41,39 @@
       <div id="match-score" class="match-score">…</div>
       <p id="match-detail" class="match-detail"></p>
     </div>
-    <label>Entreprise <input id="company" /></label>
+    <div class="company-row">
+      <img id="logo-preview" class="logo-preview hidden" alt="Logo" referrerpolicy="no-referrer" />
+      <label>Entreprise <input id="company" /></label>
+    </div>
     <label>Poste <input id="jobTitle" /></label>
     <label>Lien <input id="jobUrl" /></label>
     <label>Plateforme <input id="platform" /></label>
     <label>Localisation <input id="location" /></label>
+    <div class="two-cols">
+      <label>Contrat
+        <select id="contractType">
+          <option value="">—</option>
+          <option value="STAGE">Stage</option>
+          <option value="ALTERNANCE">Alternance</option>
+          <option value="CDI">CDI</option>
+          <option value="CDD">CDD</option>
+          <option value="FREELANCE">Freelance</option>
+          <option value="AUTRE">Autre</option>
+        </select>
+      </label>
+      <label>Mode
+        <select id="workMode">
+          <option value="">—</option>
+          <option value="SUR_SITE">Sur site</option>
+          <option value="HYBRIDE">Hybride</option>
+          <option value="TELETRAVAIL">Télétravail</option>
+        </select>
+      </label>
+      <label>Début <input id="startDate" placeholder="Février 2027" /></label>
+      <label>Durée <input id="duration" placeholder="6 mois" /></label>
+    </div>
+    <label>Domaine <input id="domain" placeholder="Data / IA, Web…" /></label>
+    <label>Logo (URL) <input id="companyLogoUrl" type="url" /></label>
     <label>Référence <input id="reference" /></label>
     <label>Description <textarea id="description" rows="4"></textarea></label>
     <label>Mots-clés / compétences <textarea id="skills" rows="2" placeholder="Java, Spring, Angular…"></textarea></label>

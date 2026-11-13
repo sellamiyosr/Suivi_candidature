@@ -1,7 +1,12 @@
 .shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 16.5rem 1fr;
+  grid-template-columns: 14rem 1fr;
+  transition: grid-template-columns 0.2s ease;
+}
+
+.shell.collapsed {
+  grid-template-columns: 4.25rem 1fr;
 }
 
 .sidebar-host {
@@ -17,8 +22,17 @@
 }
 
 .content {
-  padding: 1.5rem;
+  padding: 1.75rem 1.75rem 2.5rem;
   flex: 1;
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .content {
+    padding: 1rem 1rem 2rem;
+  }
 }
 
 .backdrop {
@@ -26,14 +40,15 @@
 }
 
 @media (max-width: 900px) {
-  .shell {
+  .shell,
+  .shell.collapsed {
     grid-template-columns: 1fr;
   }
 
   .sidebar-host {
     position: fixed;
     inset: 0 auto 0 0;
-    width: 16.5rem;
+    width: 14rem;
     z-index: 30;
     transform: translateX(-105%);
     transition: transform 0.2s ease;

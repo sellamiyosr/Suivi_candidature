@@ -9,6 +9,10 @@ export type ApplicationStatus =
 
 export type Priority = 'BASSE' | 'MOYENNE' | 'HAUTE';
 
+export type ContractType = 'STAGE' | 'ALTERNANCE' | 'CDI' | 'CDD' | 'FREELANCE' | 'AUTRE';
+
+export type WorkMode = 'SUR_SITE' | 'HYBRIDE' | 'TELETRAVAIL';
+
 export interface Application {
   id: number;
   company: string;
@@ -17,6 +21,12 @@ export interface Application {
   reference: string | null;
   platform: string | null;
   location: string | null;
+  contractType: ContractType | null;
+  workMode: WorkMode | null;
+  startDate: string | null;
+  duration: string | null;
+  domain: string | null;
+  companyLogoUrl: string | null;
   description: string | null;
   importantElements: string | null;
   skills: string | null;
@@ -82,6 +92,12 @@ export interface ApplicationRequest {
   reference?: string | null;
   platform?: string | null;
   location?: string | null;
+  contractType?: ContractType | null;
+  workMode?: WorkMode | null;
+  startDate?: string | null;
+  duration?: string | null;
+  domain?: string | null;
+  companyLogoUrl?: string | null;
   description?: string | null;
   importantElements?: string | null;
   skills?: string | null;
@@ -120,4 +136,43 @@ export const ALL_STATUSES: ApplicationStatus[] = [
   'OFFRE',
   'REFUSEE',
   'RETIREE'
+];
+
+export const CONTRACT_LABELS: Record<ContractType, string> = {
+  STAGE: 'Stage',
+  ALTERNANCE: 'Alternance',
+  CDI: 'CDI',
+  CDD: 'CDD',
+  FREELANCE: 'Freelance',
+  AUTRE: 'Autre'
+};
+
+export const ALL_CONTRACTS: ContractType[] = ['STAGE', 'ALTERNANCE', 'CDI', 'CDD', 'FREELANCE', 'AUTRE'];
+
+export const WORK_MODE_LABELS: Record<WorkMode, string> = {
+  SUR_SITE: 'Sur site',
+  HYBRIDE: 'Hybride',
+  TELETRAVAIL: 'Télétravail'
+};
+
+export const ALL_WORK_MODES: WorkMode[] = ['SUR_SITE', 'HYBRIDE', 'TELETRAVAIL'];
+
+/* Options prêtes pour <app-select> */
+export interface Option {
+  value: string;
+  label: string;
+  dot?: string;
+  color?: string;
+}
+
+export const STATUS_OPTIONS: Option[] = ALL_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s], dot: s }));
+
+export const CONTRACT_OPTIONS: Option[] = ALL_CONTRACTS.map((c) => ({ value: c, label: CONTRACT_LABELS[c] }));
+
+export const WORK_MODE_OPTIONS: Option[] = ALL_WORK_MODES.map((w) => ({ value: w, label: WORK_MODE_LABELS[w] }));
+
+export const PRIORITY_OPTIONS: Option[] = [
+  { value: 'HAUTE', label: 'Haute', color: 'var(--c-red)' },
+  { value: 'MOYENNE', label: 'Moyenne', color: 'var(--c-amber)' },
+  { value: 'BASSE', label: 'Basse', color: 'var(--c-grey)' }
 ];

@@ -1,10 +1,13 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <h1>Dashboard</h1>
-      <p>Vue d'ensemble de vos candidatures</p>
+      <h1>Tableau de bord</h1>
+      <p>Vue d'ensemble de ta recherche de stage</p>
     </div>
-    <a routerLink="/applications/new" class="btn primary">+ Nouvelle candidature</a>
+    <a routerLink="/applications/new" class="btn primary">
+      <svg class="btn-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4.5v11M4.5 10h11" /></svg>
+      Nouvelle candidature
+    </a>
   </header>
 
   @if (error) {
@@ -15,70 +18,159 @@
   }
 
   @if (loading) {
-    <p class="muted">Chargement…</p>
+    <div class="kpis">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="kpi skeleton"></div>
+      }
+    </div>
   } @else if (stats) {
-    <div class="stat-cards">
-      <article class="stat-card">
-        <span>Total</span>
-        <strong>{{ stats.total }}</strong>
+    <!-- KPI -->
+    <div class="kpis">
+      <article class="kpi">
+        <span class="kpi-icon teal">
+          <svg viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2" /><path d="M3 8h14M7 4V2.8M13 4V2.8" /></svg>
+        </span>
+        <div class="kpi-body">
+          <span class="kpi-label">Candidatures</span>
+          <strong class="kpi-value">{{ stats.total }}</strong>
+          <span class="kpi-sub">{{ statusCount('EN_ATTENTE') }} en attente de réponse</span>
+        </div>
       </article>
-      <article class="stat-card">
-        <span>En attente</span>
-        <strong>{{ statusCount('EN_ATTENTE') }}</strong>
+
+      <article class="kpi">
+        <span class="kpi-icon blue">
+          <svg viewBox="0 0 20 20"><path d="M4 15.5V14a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v1.5" /><circle cx="8" cy="6.5" r="2.7" /><path d="M13.5 9.5l1.5 1.5 3-3" /></svg>
+        </span>
+        <div class="kpi-body">
+          <span class="kpi-label">Entretiens</span>
+          <strong class="kpi-value">{{ statusCount('ENTRETIEN') }}</strong>
+          <span class="kpi-sub">Taux de réponse {{ responseRate() }}%</span>
+        </div>
       </article>
-      <article class="stat-card">
-        <span>Entretiens</span>
-        <strong>{{ statusCount('ENTRETIEN') }}</strong>
+
+      <article class="kpi">
+        <span class="kpi-icon green">
+          <svg viewBox="0 0 20 20"><path d="M10 2.8l2.1 4.3 4.7.7-3.4 3.3.8 4.7L10 13.6l-4.2 2.2.8-4.7-3.4-3.3 4.7-.7z" /></svg>
+        </span>
+        <div class="kpi-body">
+          <span class="kpi-label">Offres reçues</span>
+          <strong class="kpi-value">{{ statusCount('OFFRE') }}</strong>
+          <span class="kpi-sub">{{ statusCount('REFUSEE') }} refus au total</span>
+        </div>
       </article>
-      <article class="stat-card">
-        <span>Refusées</span>
-        <strong>{{ statusCount('REFUSEE') }}</strong>
-      </article>
-      <article class="stat-card">
-        <span>Offres</span>
-        <strong>{{ statusCount('OFFRE') }}</strong>
-      </article>
-      <article class="stat-card accent">
-        <span>Relances à faire</span>
-        <strong>{{ stats.pendingFollowUps }}</strong>
-      </article>
-      <article class="stat-card">
-        <span>Score moyen</span>
-        <strong>{{ stats.averageMatchScore != null ? (stats.averageMatchScore + '%') : '—' }}</strong>
+
+      <article class="kpi" [class.alert-kpi]="stats.pendingFollowUps > 0">
+        <span class="kpi-icon amber">
+          <svg viewBox="0 0 20 20"><path d="M10 3a5 5 0 0 0-5 5v3l-1.5 2.5h13L15 11V8a5 5 0 0 0-5-5z" /><path d="M8.2 16a1.9 1.9 0 0 0 3.6 0" /></svg>
+        </span>
+        <div class="kpi-body">
+          <span class="kpi-label">Relances à faire</span>
+          <strong class="kpi-value">{{ stats.pendingFollowUps }}</strong>
+          <span class="kpi-sub">{{ stats.pendingFollowUps > 0 ? 'À traiter aujourd’hui' : 'Rien en retard' }}</span>
+        </div>
       </article>
     </div>
-    <p class="muted ats-note">Score = estimation type ATS (mots-clés), aucun ATS réel n'est interrogé.</p>
 
-    <app-follow-up-list
-      [applications]="followUps"
-      [loading]="false"
-      (relancer)="onRelancer($event)"
-    />
-
-    <section class="recent">
-      <div class="section-head">
-        <h2>Candidatures récentes</h2>
-        <a routerLink="/applications" class="btn ghost">Tout voir</a>
-      </div>
-      @if (recent.length === 0) {
-        <p class="muted">Aucune candidature pour le moment.</p>
-      } @else {
-        <div class="recent-list">
-          @for (app of recent; track app.id) {
-            <button type="button" class="recent-item" (click)="open(app)">
-              <div>
-                <strong>{{ app.company }}</strong>
-                <span>{{ app.jobTitle }}</span>
-              </div>
-              <div class="meta">
-                <app-status-badge [status]="app.status" />
-                <span>{{ app.applicationDate | date: 'dd/MM/yyyy' }}</span>
-              </div>
-            </button>
-          }
+    <!-- Pipeline + score -->
+    <div class="row two-one">
+      <article class="panel pipeline">
+        <div class="panel-head">
+          <div>
+            <h2>Pipeline</h2>
+            <p class="panel-sub">Répartition de tes candidatures par statut</p>
+          </div>
         </div>
-      }
-    </section>
+        @if (stats.total > 0) {
+          <div class="bar" role="img" aria-label="Répartition par statut">
+            @for (seg of pipeline(); track seg.status) {
+              @if (seg.count > 0) {
+                <span
+                  class="seg"
+                  [attr.data-status]="seg.status"
+                  [style.flex-grow]="seg.count"
+                  [title]="seg.label + ' : ' + seg.count"
+                ></span>
+              }
+            }
+          </div>
+          <ul class="legend">
+            @for (seg of pipeline(); track seg.status) {
+              <li>
+                <span class="dot" [attr.data-status]="seg.status"></span>
+                <span class="legend-label">{{ seg.label }}</span>
+                <strong>{{ seg.count }}</strong>
+                <span class="pct">{{ seg.pct }}%</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="muted">Ajoute ta première candidature pour voir le pipeline.</p>
+        }
+      </article>
+
+      <article class="panel score">
+        <div class="panel-head">
+          <div>
+            <h2>Compatibilité moyenne</h2>
+            <p class="panel-sub">Ton CV face aux offres</p>
+          </div>
+        </div>
+        <div class="gauge">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="track" cx="60" cy="60" r="50" />
+            <circle
+              class="value"
+              [attr.data-level]="scoreLevel()"
+              cx="60"
+              cy="60"
+              r="50"
+              [attr.stroke-dasharray]="gaugeDash()"
+            />
+          </svg>
+          <div class="gauge-label">
+            <strong>{{ stats.averageMatchScore != null ? stats.averageMatchScore : '—' }}<small>{{ stats.averageMatchScore != null ? '%' : '' }}</small></strong>
+            <span>score moyen</span>
+          </div>
+        </div>
+        <p class="note">Estimation par mots-clés, pas un vrai ATS.</p>
+      </article>
+    </div>
+
+    <!-- Relances + récentes -->
+    <div class="row halves">
+      <app-follow-up-list [applications]="followUps" [loading]="false" (relancer)="onRelancer($event)" />
+
+      <article class="panel recent">
+        <div class="panel-head">
+          <div>
+            <h2>Candidatures récentes</h2>
+            <p class="panel-sub">Les 5 dernières ajoutées</p>
+          </div>
+          <a routerLink="/applications" class="link">Tout voir →</a>
+        </div>
+        @if (recent.length === 0) {
+          <p class="muted">Aucune candidature pour le moment.</p>
+        } @else {
+          <ul class="recent-list">
+            @for (app of recent; track app.id) {
+              <li>
+                <button type="button" class="recent-item" (click)="open(app)">
+                  <app-company-logo [url]="app.companyLogoUrl" [name]="app.company" [size]="34" />
+                  <span class="recent-main">
+                    <strong>{{ app.company }}</strong>
+                    <span>{{ app.jobTitle }}</span>
+                  </span>
+                  <span class="recent-meta">
+                    <app-status-badge [status]="app.status" />
+                    <span class="date">{{ app.applicationDate ? (app.applicationDate | date: 'dd/MM/yyyy') : '—' }}</span>
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    </div>
 
     <app-statistics [stats]="stats" />
   }

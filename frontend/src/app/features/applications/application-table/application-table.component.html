@@ -1,34 +1,94 @@
 <div class="table-wrap">
   <table>
+    <colgroup>
+      <col class="c-company" />
+      <col class="c-job" />
+      <col class="c-contract" />
+      <col class="c-status" />
+      <col class="c-score" />
+      <col class="c-follow" />
+    </colgroup>
     <thead>
       <tr>
         <th>Entreprise</th>
         <th>Poste</th>
-        <th>Date</th>
-        <th>Plateforme</th>
+        <th>Contrat</th>
         <th>Statut</th>
-        <th>Compatibilité</th>
-        <th>Relance</th>
-        <th>Priorité</th>
+        <th>Compat.</th>
+        <th>Suivi</th>
       </tr>
     </thead>
     <tbody>
       @for (app of applications; track app.id) {
         <tr (click)="rowClick.emit(app)">
-          <td>{{ app.company }}</td>
-          <td>{{ app.jobTitle }}</td>
-          <td>{{ app.applicationDate | date: 'dd/MM/yyyy' }}</td>
-          <td>{{ app.platform || '—' }}</td>
-          <td><app-status-badge [status]="app.status" /></td>
-          <td>
+          <td class="company" data-label="Entreprise">
+            <div class="company-cell">
+            <app-company-logo [url]="app.companyLogoUrl" [name]="app.company" [size]="34" />
+            <div class="stack">
+              <span class="company-name">{{ app.company }}</span>
+              <span class="sub">
+                {{ app.platform || 'Source inconnue' }}
+                @if (app.applicationDate) {
+                  · {{ app.applicationDate | date: 'dd/MM/yy' }}
+                }
+              </span>
+            </div>
+            </div>
+          </td>
+
+          <td class="job" data-label="Poste">
+            <span class="job-title">{{ app.jobTitle }}</span>
+            @if (jobMeta(app); as meta) {
+              <span class="sub meta">{{ meta }}</span>
+            }
+            @if (topSkills(app).length) {
+              <span class="skills">
+                @for (s of topSkills(app); track s) {
+                  <span class="tag">{{ s }}</span>
+                }
+                @if (extraSkills(app) > 0) {
+                  <span class="more">+{{ extraSkills(app) }}</span>
+                }
+              </span>
+            }
+          </td>
+
+          <td data-label="Contrat">
+            @if (app.contractType) {
+              <span class="contract">{{ contractLabels[app.contractType] }}</span>
+            } @else {
+              <span class="none">—</span>
+            }
+            @if (timing(app); as t) {
+              <span class="sub">{{ t }}</span>
+            }
+          </td>
+
+          <td data-label="Statut" (click)="$event.stopPropagation()">
+            <app-select
+              variant="pill"
+              ariaLabel="Changer le statut"
+              [options]="statusOptions"
+              [value]="app.status"
+              [disabled]="updatingId === app.id"
+              (valueChange)="onStatusPicked(app, $event)"
+            />
+          </td>
+
+          <td data-label="Compat.">
             <app-score-badge [score]="app.matchScore" [insufficient]="app.matchInsufficient" />
           </td>
-          <td>{{ followUpLabel(app) }}</td>
-          <td>{{ priorityLabels[app.priority] }}</td>
+
+          <td data-label="Suivi">
+            <span class="follow">{{ followUpLabel(app) }}</span>
+            <span class="sub priority" [attr.data-priority]="app.priority">
+              Priorité {{ priorityLabels[app.priority].toLowerCase() }}
+            </span>
+          </td>
         </tr>
       } @empty {
-        <tr>
-          <td colspan="8" class="empty">Aucune candidature</td>
+        <tr class="empty-row">
+          <td colspan="6" class="empty">Aucune candidature ne correspond.</td>
         </tr>
       }
     </tbody>

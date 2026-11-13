@@ -1,97 +1,178 @@
 <section class="page" (paste)="onPaste($event)">
   <header class="page-header">
     <div>
+      <a routerLink="/applications" class="back">← Candidatures</a>
       <h1>{{ isEdit ? 'Modifier la candidature' : 'Nouvelle candidature' }}</h1>
-      <p>Renseignez les informations de l'offre</p>
+      <p>Seuls l'entreprise et le poste sont obligatoires, le reste peut attendre.</p>
     </div>
-    <a routerLink="/applications" class="btn ghost">Retour</a>
   </header>
 
   @if (error) {
     <div class="alert">{{ error }}</div>
   }
 
-  <p class="cv-hint muted">
-    Pour un score de compatibilité, ajoute ton CV dans
-    <a routerLink="/settings">Paramètres</a>
-    (estimation type ATS — aucun ATS réel n'est interrogé).
-  </p>
+  <form class="layout" [formGroup]="form" (ngSubmit)="submit()">
+    <!-- ============ Colonne principale ============ -->
+    <div class="main">
+      <!-- 1. Offre -->
+      <section class="card block">
+        <div class="block-head">
+          <span class="step">1</span>
+          <div>
+            <h2>L'offre</h2>
+            <p>Qui recrute et pour quel poste</p>
+          </div>
+        </div>
+        <div class="grid g2">
+          <label [class.invalid]="isInvalid('company')">
+            Entreprise <span class="req">*</span>
+            <input formControlName="company" placeholder="Ex. Sopra Steria" />
+          </label>
+          <label [class.invalid]="isInvalid('jobTitle')">
+            Poste <span class="req">*</span>
+            <input formControlName="jobTitle" placeholder="Ex. Stage développeur Java" />
+          </label>
+        </div>
+        <div class="grid g3">
+          <label class="span2">Lien de l'offre<input formControlName="jobUrl" type="url" placeholder="https://…" /></label>
+          <label>Plateforme<input formControlName="platform" placeholder="LinkedIn, Indeed…" /></label>
+          <label class="span2">Localisation<input formControlName="location" placeholder="Paris, Lyon, Tunis…" /></label>
+          <label>Référence<input formControlName="reference" placeholder="Optionnel" /></label>
+        </div>
+      </section>
 
-  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
-    <fieldset>
-      <legend>Principal</legend>
-      <div class="grid">
-        <label>Entreprise *<input formControlName="company" /></label>
-        <label>Poste *<input formControlName="jobTitle" /></label>
-        <label>Lien de l'offre<input formControlName="jobUrl" type="url" /></label>
-        <label>Référence<input formControlName="reference" /></label>
-        <label>Date de candidature<input formControlName="applicationDate" type="date" /></label>
-        <label>Plateforme<input formControlName="platform" placeholder="LinkedIn, Indeed…" /></label>
-        <label>Localisation<input formControlName="location" /></label>
-      </div>
-    </fieldset>
+      <!-- 2. Contrat -->
+      <section class="card block">
+        <div class="block-head">
+          <span class="step">2</span>
+          <div>
+            <h2>Contrat</h2>
+            <p>Type, rythme et période</p>
+          </div>
+        </div>
+        <div class="grid g4">
+          <div class="field">
+            <span class="field-label">Type</span>
+            <app-select formControlName="contractType" [options]="contractOptions" placeholder="Non précisé" ariaLabel="Type de contrat" />
+          </div>
+          <div class="field">
+            <span class="field-label">Mode</span>
+            <app-select formControlName="workMode" [options]="workModeOptions" placeholder="Non précisé" ariaLabel="Mode de travail" />
+          </div>
+          <label>Début<input formControlName="startDate" placeholder="Févr. 2027" /></label>
+          <label>Durée<input formControlName="duration" placeholder="6 mois" /></label>
+        </div>
+        <div class="grid g2">
+          <label>Domaine<input formControlName="domain" placeholder="Data / IA, Web, DevOps…" /></label>
+          <label>
+            Logo de l'entreprise
+            <span class="with-preview">
+              <app-company-logo [url]="form.controls.companyLogoUrl.value || null" [name]="form.controls.company.value || '?'" [size]="34" />
+              <input formControlName="companyLogoUrl" type="url" placeholder="URL de l'image (optionnel)" />
+            </span>
+          </label>
+        </div>
+      </section>
 
-    <fieldset>
-      <legend>Important</legend>
-      <label>Éléments majeurs<textarea formControlName="importantElements" rows="3"></textarea></label>
-      <label>Compétences / technologies<input formControlName="skills" /></label>
-      <label>Description<textarea formControlName="description" rows="4"></textarea></label>
-    </fieldset>
-
-    <fieldset>
-      <legend>Contact</legend>
-      <div class="grid">
-        <label>Nom<input formControlName="contactName" /></label>
-        <label>Email<input formControlName="contactEmail" type="email" /></label>
-        <label>LinkedIn<input formControlName="contactLinkedin" /></label>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Suivi</legend>
-      <div class="grid">
+      <!-- 3. Contenu -->
+      <section class="card block">
+        <div class="block-head">
+          <span class="step">3</span>
+          <div>
+            <h2>Contenu de l'offre</h2>
+            <p>Sert à calculer la compatibilité avec ton CV</p>
+          </div>
+        </div>
         <label>
-          Statut
-          <select formControlName="status">
-            @for (s of statuses; track s) {
-              <option [value]="s">{{ statusLabels[s] }}</option>
-            }
-          </select>
+          Compétences demandées
+          <input formControlName="skills" placeholder="Java, Spring Boot, Angular, SQL…" />
+          <span class="help">Sépare-les par des virgules.</span>
         </label>
         <label>
-          Priorité
-          <select formControlName="priority">
-            @for (p of priorities; track p) {
-              <option [value]="p">{{ priorityLabels[p] }}</option>
-            }
-          </select>
+          Description
+          <textarea formControlName="description" rows="4" placeholder="Colle ici le texte de l'offre…"></textarea>
         </label>
-        @if (isEdit) {
-          <label>Relance 1<input formControlName="followUp1Date" type="date" /></label>
-          <label>Relance 2<input formControlName="followUp2Date" type="date" /></label>
-        }
-      </div>
-      <label>Notes<textarea formControlName="notes" rows="3"></textarea></label>
-    </fieldset>
+      </section>
 
-    <fieldset>
-      <legend>Capture</legend>
-      <div class="screenshot-box">
-        <label class="btn ghost file-btn">
-          📷 Ajouter une capture
-          <input type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
-        </label>
-        <span class="hint">ou collez une image (Ctrl+V)</span>
-        @if (screenshotPreview) {
-          <img [src]="screenshotPreview" alt="Capture de l'offre" />
-        }
-      </div>
-    </fieldset>
+      <!-- Sections optionnelles repliées -->
+      <details class="card more" [open]="hasContact()">
+        <summary>
+          <span class="summary-title">Contact recruteur</span>
+          <span class="summary-hint">Optionnel</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+        </summary>
+        <div class="more-body grid g3">
+          <label>Nom<input formControlName="contactName" /></label>
+          <label>Email<input formControlName="contactEmail" type="email" /></label>
+          <label>LinkedIn<input formControlName="contactLinkedin" placeholder="https://linkedin.com/in/…" /></label>
+        </div>
+      </details>
 
-    <div class="actions">
-      <button class="btn primary" type="submit" [disabled]="loading">
-        {{ loading ? 'Enregistrement…' : 'Enregistrer' }}
-      </button>
+      <details class="card more" [open]="hasExtras()">
+        <summary>
+          <span class="summary-title">Points clés et notes</span>
+          <span class="summary-hint">Optionnel</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+        </summary>
+        <div class="more-body grid g2">
+          <label>Éléments majeurs<textarea formControlName="importantElements" rows="3" placeholder="Exigences, langues, niveau…"></textarea></label>
+          <label>Notes perso<textarea formControlName="notes" rows="3" placeholder="Ce que tu veux retenir…"></textarea></label>
+        </div>
+      </details>
     </div>
+
+    <!-- ============ Panneau latéral ============ -->
+    <aside class="side">
+      <section class="card side-card">
+        <h3>Suivi</h3>
+        <div class="field">
+          <span class="field-label">Statut</span>
+          <app-select formControlName="status" [options]="statusOptions" ariaLabel="Statut" />
+        </div>
+        <div class="field">
+          <span class="field-label">Priorité</span>
+          <app-select formControlName="priority" [options]="priorityOptions" ariaLabel="Priorité" />
+        </div>
+        <label>Date de candidature<input formControlName="applicationDate" type="date" /></label>
+        @if (isEdit) {
+          <div class="grid g2 tight">
+            <label>Relance 1<input formControlName="followUp1Date" type="date" /></label>
+            <label>Relance 2<input formControlName="followUp2Date" type="date" /></label>
+          </div>
+        } @else {
+          <p class="help">Les relances sont planifiées automatiquement à partir de la date.</p>
+        }
+      </section>
+
+      <section class="card side-card">
+        <h3>Capture de l'offre</h3>
+        @if (screenshotPreview) {
+          <div class="shot">
+            <img [src]="screenshotPreview" alt="Capture de l'offre" />
+            <label class="shot-change">
+              Changer
+              <input type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
+            </label>
+          </div>
+        } @else {
+          <label class="drop">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="10" r="1.6" /><path d="M21 16l-5-5-8 8" /></svg>
+            <span><strong>Choisir une image</strong> ou Ctrl+V</span>
+            <input type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
+          </label>
+        }
+      </section>
+
+      <div class="side-actions">
+        <button class="btn primary" type="submit" [disabled]="loading">
+          {{ loading ? 'Enregistrement…' : (isEdit ? 'Enregistrer les modifications' : 'Ajouter la candidature') }}
+        </button>
+        <a routerLink="/applications" class="btn ghost">Annuler</a>
+      </div>
+
+      <p class="cv-hint">
+        Score de compatibilité : ajoute ton CV dans <a routerLink="/settings" [queryParams]="{ tab: 'cv' }">Paramètres</a>.
+      </p>
+    </aside>
   </form>
 </section>

@@ -1,6 +1,11 @@
-<div class="shell" [class.mobile-open]="mobileOpen">
+<div class="shell" [class.mobile-open]="mobileOpen" [class.collapsed]="collapsed">
   <div class="backdrop" (click)="closeMobile()"></div>
-  <app-sidebar class="sidebar-host" (navigate)="closeMobile()"></app-sidebar>
+  <app-sidebar
+    class="sidebar-host"
+    [collapsed]="collapsed && !mobileOpen"
+    (navigate)="closeMobile()"
+    (toggleCollapse)="toggleCollapse()"
+  ></app-sidebar>
   <div class="main">
     <app-topbar (menuToggle)="toggleMobile()"></app-topbar>
     <main class="content">
@@ -8,3 +13,4 @@
     </main>
   </div>
 </div>
+<app-chat-widget />

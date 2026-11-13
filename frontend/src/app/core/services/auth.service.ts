@@ -34,6 +34,12 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EMAIL_KEY);
     localStorage.removeItem(USER_ID_KEY);
+    try {
+      // Conversation de l'assistant : ne doit pas passer d'un compte à l'autre
+      sessionStorage.removeItem('pfe_chat_history');
+    } catch {
+      /* stockage indisponible : ignorer */
+    }
     this.email.set(null);
     this.isAuthenticated.set(false);
     this.router.navigate(['/login']);

@@ -1,10 +1,21 @@
-<section class="follow-ups">
-  <h2>🔴 Relances à faire aujourd'hui</h2>
+<section class="follow-ups panel">
+  <div class="head">
+    <div>
+      <h2>Relances du jour</h2>
+      <p class="sub">Les candidatures à relancer maintenant</p>
+    </div>
+    @if (!loading && applications.length) {
+      <span class="count">{{ applications.length }}</span>
+    }
+  </div>
 
   @if (loading) {
     <p class="muted">Chargement…</p>
   } @else if (applications.length === 0) {
-    <p class="muted empty">Aucune relance due pour le moment.</p>
+    <div class="empty">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" /><path d="M7 10.2l2 2 4-4.2" /></svg>
+      <span>Aucune relance en attente, tout est à jour.</span>
+    </div>
   } @else {
     <ul>
       @for (app of applications; track app.id) {
@@ -17,7 +28,7 @@
           <div class="actions">
             <app-status-badge [status]="app.status" />
             @if (nextNumber(app); as n) {
-              <button type="button" class="btn primary" (click)="onRelancer(app, $event)">
+              <button type="button" class="btn primary small" (click)="onRelancer(app, $event)">
                 Relancer
               </button>
             }

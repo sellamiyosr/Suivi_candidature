@@ -1,45 +1,90 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <h1>Mes candidatures</h1>
-      <p>Recherche, filtres et suivi de vos offres</p>
+      <h1>Candidatures</h1>
+      <p>
+        @if (loading()) {
+          Chargement…
+        } @else if (filtered().length === applications().length) {
+          {{ applications().length }} offre{{ applications().length > 1 ? 's' : '' }} suivie{{ applications().length > 1 ? 's' : '' }}
+        } @else {
+          {{ filtered().length }} sur {{ applications().length }} offres
+        }
+      </p>
     </div>
-    <a routerLink="/applications/new" class="btn primary">+ Nouvelle candidature</a>
+    <a routerLink="/applications/new" class="btn primary">Nouvelle candidature</a>
   </header>
 
-  <div class="filters">
-    <input
-      type="search"
-      placeholder="Rechercher entreprise, poste…"
-      [ngModel]="search()"
-      (ngModelChange)="onSearch($event)"
-    />
-    <select [ngModel]="statusFilter()" (ngModelChange)="onStatus($event)">
-      <option value="">Tous les statuts</option>
-      @for (s of statuses; track s) {
-        <option [value]="s">{{ statusLabels[s] }}</option>
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" /><path d="M13.2 13.2L17 17" /></svg>
+      <input
+        type="search"
+        placeholder="Entreprise, poste, ville, compétence…"
+        [ngModel]="search()"
+        (ngModelChange)="onSearch($event)"
+      />
+    </div>
+
+    <div class="filters">
+      <app-select
+        variant="filter"
+        placeholder="Statut"
+        ariaLabel="Filtrer par statut"
+        [options]="statusFilterOptions"
+        [value]="statusFilter()"
+        (valueChange)="onStatus($event)"
+      />
+      <app-select
+        variant="filter"
+        placeholder="Contrat"
+        ariaLabel="Filtrer par contrat"
+        [options]="contractFilterOptions"
+        [value]="contractFilter()"
+        (valueChange)="contractFilter.set($event)"
+      />
+      <app-select
+        variant="filter"
+        placeholder="Mode"
+        ariaLabel="Filtrer par mode de travail"
+        [options]="workModeFilterOptions"
+        [value]="workModeFilter()"
+        (valueChange)="workModeFilter.set($event)"
+      />
+      <app-select
+        variant="filter"
+        placeholder="Plateforme"
+        ariaLabel="Filtrer par plateforme"
+        [options]="platformFilterOptions()"
+        [value]="platformFilter()"
+        (valueChange)="onPlatform($event)"
+      />
+      @if (hasFilters()) {
+        <button type="button" class="clear" (click)="clearFilters()">Effacer</button>
       }
-    </select>
-    <select [ngModel]="platformFilter()" (ngModelChange)="onPlatform($event)">
-      <option value="">Toutes les plateformes</option>
-      @for (p of platforms(); track p) {
-        <option [value]="p">{{ p }}</option>
-      }
-    </select>
-    <button type="button" class="btn ghost" (click)="sortByDate()">
-      Tri date {{ sortBy() === 'date' ? (sortAsc() ? '↑' : '↓') : '' }}
-    </button>
-    <button type="button" class="btn ghost" (click)="sortByScore()">
-      Tri score {{ sortBy() === 'score' ? '↓' : '' }}
-    </button>
+
+      <div class="sort" role="group" aria-label="Trier">
+        <button type="button" [class.on]="sortBy() === 'date'" (click)="sortByDate()">
+          Date {{ sortBy() === 'date' ? (sortAsc() ? '↑' : '↓') : '' }}
+        </button>
+        <button type="button" [class.on]="sortBy() === 'score'" (click)="sortByScore()">
+          Score {{ sortBy() === 'score' ? '↓' : '' }}
+        </button>
+      </div>
+    </div>
   </div>
-  <p class="muted ats-note">Compatibilité = estimation type ATS (mots-clés), aucun ATS réel n'est interrogé.</p>
 
   @if (loading()) {
     <p class="muted">Chargement…</p>
   } @else if (error()) {
     <div class="alert">{{ error() }}</div>
   } @else {
-    <app-application-table [applications]="filtered()" (rowClick)="open($event)" />
+    <app-application-table
+      [applications]="filtered()"
+      [updatingId]="updatingId()"
+      (rowClick)="open($event)"
+      (statusChange)="changeStatus($event.app, $event.status)"
+    />
+    <p class="ats-note">Compatibilité : estimation par mots-clés à partir de ton CV, aucun vrai ATS n'est interrogé.</p>
   }
 </section>
